@@ -19,9 +19,8 @@ export class AuthService {
   ) {}
 
   async signUp(registerDto: RegisterDto) {
-    const existingUser: User | null = await this.usersService.findByEmail(
-      registerDto.email,
-    );
+    const existingUser: Partial<User> | null =
+      await this.usersService.findByEmailForAuth(registerDto.email);
 
     if (existingUser) {
       throw new ConflictException('این ایمیل از قبل وجود دارد');
@@ -42,16 +41,16 @@ export class AuthService {
   }
 
   async signIn(loginDto: LoginDto): Promise<string> {
-    const user: User | null = await this.validateUser(
+    const user: Partial<User> | null = await this.validateUser(
       loginDto.email,
       loginDto.password,
     );
 
     if (!user) {
-      throw new ForbiddenException('کاربری با این اطلاعات یافت نشد');
+      throw new ForbiddenException('ایمیل یا رمز عبور اشتباه است.');
     }
 
-    const payload: Record<string, string | number> = {
+    const payload: Record<string, string | number | undefined> = {
       email: user.email,
       sub: user.id,
     };
@@ -59,10 +58,14 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
-    const user: User | null = await this.usersService.findByEmail(email);
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<Partial<User> | null> {
+    const user: Partial<User> | null =
+      await this.usersService.findByEmailForAuth(email);
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (user?.password && (await bcrypt.compare(password, user.password))) {
       return user;
     }
 

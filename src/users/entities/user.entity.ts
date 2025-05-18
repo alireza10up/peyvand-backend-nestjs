@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn, Timestamp } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -14,8 +14,8 @@ export class User {
   @Column({ length: 128, nullable: true })
   last_name: string;
 
-  @Column({ type: 'timestamp', nullable: true })
-  brith_date: Timestamp;
+  @Column({ type: 'date', nullable: true })
+  birth_date: Date;
 
   @Column({ length: 128, nullable: true, unique: true })
   student_code: string;
