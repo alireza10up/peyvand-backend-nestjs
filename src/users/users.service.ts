@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -38,6 +42,17 @@ export class UsersService {
 
     if (!hasUpdates) {
       return this.findById(id);
+    }
+
+    // Check Field Uniques
+    if (updateData.student_code != undefined) {
+      const existingUser = await this.usersRepository.findOne({
+        where: { student_code: updateData.student_code },
+      });
+
+      if (existingUser && existingUser.id !== id) {
+        throw new ConflictException('کد دانشجویی تکراری است');
+      }
     }
 
     const cleanUpdateData: Record<string, any> = {};
