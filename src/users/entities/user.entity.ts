@@ -14,8 +14,11 @@ export class User {
   @Column({ length: 128, nullable: true })
   last_name: string;
 
-  @Column({ type: 'timestamp' })
-  age: Timestamp;
+  @Column({ type: 'timestamp', nullable: true })
+  brith_date: Timestamp;
+
+  @Column({ length: 128, nullable: true, unique: true })
+  student_code: string;
 
   @Column({ select: false, nullable: false })
   password: string;
