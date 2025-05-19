@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PostsService } from '../posts.service';
 
 @Injectable()
@@ -12,7 +17,7 @@ export class PostVisibilityGuard implements CanActivate {
     if (!postId) return true;
     const post = await this.postsService.findOne(+postId);
     if (post.status !== 'published' && (!user || post.author.id !== user.id)) {
-      throw new ForbiddenException('You are not allowed to see this post');
+      throw new ForbiddenException('شما مجاز به دیدن این پست نیستید.');
     }
     return true;
   }

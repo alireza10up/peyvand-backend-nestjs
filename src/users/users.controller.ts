@@ -53,26 +53,32 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('upload-profile')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + extname(file.originalname));
-      },
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueSuffix + extname(file.originalname));
+        },
+      }),
     }),
-  }))
+  )
   async uploadProfile(
     @UploadedFile() file: any,
     @Request() req: { user: { userId: number } },
   ) {
     const user = await this.usersService.findById(req.user.userId);
     if (!user) throw new Error('User not found');
-    const fileRecord = await this.filesService.create({
-      filename: file.filename,
-      mimetype: file.mimetype,
-      url: `/uploads/${file.filename}`,
-    }, user);
+    const fileRecord = await this.filesService.create(
+      {
+        filename: file.filename,
+        mimetype: file.mimetype,
+        url: `/uploads/${file.filename}`,
+      },
+      user,
+    );
     await this.usersService.setProfileFile(req.user.userId, fileRecord.id);
     return fileRecord;
   }

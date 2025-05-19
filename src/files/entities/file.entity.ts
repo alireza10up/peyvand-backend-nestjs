@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Post } from '../../posts/entities/post.entity';
 
@@ -19,10 +27,10 @@ export class FileEntity {
   @Column({ default: 'public' })
   visibility: 'public' | 'private';
 
-  @ManyToOne(() => User, user => user.files, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.files, { onDelete: 'CASCADE' })
   user: User;
 
-  @OneToMany(() => Post, post => post.file)
+  @OneToMany(() => Post, (post) => post.file)
   posts: Post[];
 
   @CreateDateColumn()

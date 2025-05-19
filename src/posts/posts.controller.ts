@@ -1,11 +1,20 @@
-import { Controller, Get, Post as HttpPost, Body, Param, Patch, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post as HttpPost,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { PostVisibilityGuard } from './guards/post-visibility.guard';
 import { PostOwnerGuard } from './guards/post-owner.guard';
-import { Post } from './entities/post.entity';
 
 @Controller('posts')
 export class PostsController {
@@ -30,7 +39,11 @@ export class PostsController {
 
   @Patch(':id')
   @UseGuards(PostOwnerGuard)
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto, @Request() req) {
+  update(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+    @Request() req,
+  ) {
     return this.postsService.update(+id, updatePostDto, req.user);
   }
 

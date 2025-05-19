@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { FilesService } from '../files.service';
 
 @Injectable()
@@ -11,7 +16,7 @@ export class FilePrivateGuard implements CanActivate {
     const fileId = request.params.id;
     if (!fileId) return false;
     const file = await this.filesService.findOne(+fileId);
-    if (!user || file.user.id !== user.id) {
+    if (!user || file?.user?.id !== user?.id) {
       throw new ForbiddenException('You are not allowed to access this file');
     }
     return true;

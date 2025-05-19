@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { FileEntity } from '../../files/entities/file.entity';
 
@@ -13,13 +20,17 @@ export class Post {
   @Column('text')
   content: string;
 
-  @ManyToOne(() => User, user => user.posts, { eager: true })
+  @ManyToOne(() => User, (user) => user.posts, { eager: true })
   author: User;
 
-  @Column({ type: 'enum', enum: ['draft', 'published', 'archived'], default: 'draft' })
+  @Column({
+    type: 'enum',
+    enum: ['draft', 'published', 'archived'],
+    default: 'draft',
+  })
   status: 'draft' | 'published' | 'archived';
 
-  @ManyToOne(() => FileEntity, file => file.posts, { nullable: true })
+  @ManyToOne(() => FileEntity, (file) => file.posts, { nullable: true })
   file: FileEntity;
 
   @CreateDateColumn()

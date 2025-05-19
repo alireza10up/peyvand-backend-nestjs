@@ -26,10 +26,10 @@ export class User {
   @Column({ select: false, nullable: false })
   password: string;
 
-  @OneToMany(() => Post, post => post.author)
+  @OneToMany(() => Post, (post) => post.author)
   posts: Post[];
 
-  @OneToMany(() => FileEntity, file => file.user)
+  @OneToMany(() => FileEntity, (file) => file.user)
   files: FileEntity[];
 
   @ManyToOne(() => FileEntity, { nullable: true })

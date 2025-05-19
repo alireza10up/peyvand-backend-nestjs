@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PostsService } from '../posts.service';
 
 @Injectable()
@@ -12,7 +17,7 @@ export class PostOwnerGuard implements CanActivate {
     if (!postId) return false;
     const post = await this.postsService.findOne(+postId);
     if (!user || post.author.id !== user.id) {
-      throw new ForbiddenException('You can only modify your own posts');
+      throw new ForbiddenException('شما مجوز ویرایش این پست را ندارید.');
     }
     return true;
   }

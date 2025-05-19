@@ -13,7 +13,11 @@ export class FilesService {
   ) {}
 
   async create(createFileDto: CreateFileDto, user: User): Promise<FileEntity> {
-    const file = this.filesRepository.create({ ...createFileDto, user, visibility: createFileDto.visibility || 'public' });
+    const file = this.filesRepository.create({
+      ...createFileDto,
+      user,
+      visibility: createFileDto.visibility || 'public',
+    });
     return this.filesRepository.save(file);
   }
 
