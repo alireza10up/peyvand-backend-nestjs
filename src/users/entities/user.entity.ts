@@ -1,4 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Post } from '../../posts/entities/post.entity';
+import { OneToMany, ManyToOne } from 'typeorm';
+import { FileEntity } from '../../files/entities/file.entity';
 
 @Entity()
 export class User {
@@ -22,4 +25,13 @@ export class User {
 
   @Column({ select: false, nullable: false })
   password: string;
+
+  @OneToMany(() => Post, post => post.author)
+  posts: Post[];
+
+  @OneToMany(() => FileEntity, file => file.user)
+  files: FileEntity[];
+
+  @ManyToOne(() => FileEntity, { nullable: true })
+  profileFile: FileEntity;
 }

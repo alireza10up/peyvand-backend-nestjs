@@ -70,4 +70,9 @@ export class UsersService {
     await this.usersRepository.update(id, cleanUpdateData);
     return this.findById(id);
   }
+
+  async setProfileFile(userId: number, fileId: number) {
+    await this.usersRepository.update(userId, { profileFile: { id: fileId } });
+    return this.findById(userId);
+  }
 }
