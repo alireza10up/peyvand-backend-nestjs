@@ -3,7 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { FileEntity } from './entities/file.entity';
 import { CreateFileDto } from './dto/create-file.dto';
-import { User } from '../users/entities/user.entity';
+import { UserEntity } from '../users/entities/user.entity';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class FilesService {
@@ -12,7 +14,10 @@ export class FilesService {
     private filesRepository: Repository<FileEntity>,
   ) {}
 
-  async create(createFileDto: CreateFileDto, user: User): Promise<FileEntity> {
+  async create(
+    createFileDto: CreateFileDto,
+    user: UserEntity,
+  ): Promise<FileEntity> {
     const now = new Date();
     const expiryDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -39,11 +44,13 @@ export class FilesService {
   }
 
   async deleteFileFromDisk(filename: string): Promise<void> {
-    const fs = require('fs');
-    const path = require('path');
     const filePath = path.join('./uploads', filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    try {
+      await fs.access(filePath);
+      await fs.unlink(filePath);
+    } catch (error) {
+      console.error(error);
+      console.warn(`File not found or can't be deleted: ${filePath}`);
     }
   }
 
