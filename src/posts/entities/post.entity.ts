@@ -1,16 +1,17 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
   ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { UserEntity } from '../../users/entities/user.entity';
 import { FileEntity } from '../../files/entities/file.entity';
 
 @Entity('posts')
-export class Post {
+export class PostEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -20,8 +21,8 @@ export class Post {
   @Column('text')
   content: string;
 
-  @ManyToOne(() => User, (user) => user.posts, { eager: true })
-  author: User;
+  @ManyToOne(() => UserEntity, (user) => user.posts, { eager: true })
+  user: UserEntity;
 
   @Column({
     type: 'enum',
@@ -30,8 +31,8 @@ export class Post {
   })
   status: 'draft' | 'published' | 'archived';
 
-  @ManyToOne(() => FileEntity, (file) => file.posts, { nullable: true })
-  file: FileEntity;
+  @OneToMany(() => FileEntity, (file) => file.post)
+  files: FileEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

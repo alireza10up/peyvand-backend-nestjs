@@ -1,26 +1,25 @@
 import {
   Injectable,
-  BadRequestException,
   ConflictException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { UserEntity } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    @InjectRepository(UserEntity)
+    private readonly usersRepository: Repository<UserEntity>,
   ) {}
 
-  create(createUserDto: CreateUserDto): Promise<User | undefined> {
+  create(createUserDto: CreateUserDto): Promise<UserEntity | undefined> {
     return this.usersRepository.save(createUserDto);
   }
 
-  findByEmail(email: string): Promise<User | null> {
+  findByEmail(email: string): Promise<UserEntity | null> {
     return this.usersRepository.findOne({ where: { email } });
   }
 

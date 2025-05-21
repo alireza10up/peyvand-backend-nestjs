@@ -1,10 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Post } from '../../posts/entities/post.entity';
-import { OneToMany, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { PostEntity } from '../../posts/entities/post.entity';
 import { FileEntity } from '../../files/entities/file.entity';
 
 @Entity()
-export class User {
+export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -26,8 +31,8 @@ export class User {
   @Column({ select: false, nullable: false })
   password: string;
 
-  @OneToMany(() => Post, (post) => post.author)
-  posts: Post[];
+  @OneToMany(() => PostEntity, (post) => post.user)
+  posts: PostEntity[];
 
   @OneToMany(() => FileEntity, (file) => file.user)
   files: FileEntity[];

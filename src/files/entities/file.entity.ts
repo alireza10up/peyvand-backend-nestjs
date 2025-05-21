@@ -1,14 +1,13 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
   ManyToOne,
-  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Post } from '../../posts/entities/post.entity';
+import { UserEntity } from '../../users/entities/user.entity';
+import { PostEntity } from '../../posts/entities/post.entity';
 
 @Entity('files')
 export class FileEntity {
@@ -27,15 +26,24 @@ export class FileEntity {
   @Column({ default: 'public' })
   visibility: 'public' | 'private';
 
-  @ManyToOne(() => User, (user) => user.files, { onDelete: 'CASCADE' })
-  user: User;
+  @ManyToOne(() => UserEntity, (user) => user.files, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  user?: UserEntity;
 
-  @OneToMany(() => Post, (post) => post.file)
-  posts: Post[];
+  @ManyToOne(() => PostEntity, (post) => post.files, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  post?: PostEntity;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  expiresAt?: Date | null;
 }

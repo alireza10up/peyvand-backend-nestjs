@@ -14,7 +14,6 @@ import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { FilePrivateGuard } from './guards/file-private.guard';
-import { FileEntity } from './entities/file.entity';
 
 @Controller('files')
 export class FilesController {
