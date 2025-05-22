@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { FileEntity } from './entities/file.entity';
@@ -6,25 +6,26 @@ import { CreateFileDto } from './dto/create-file.dto';
 import { UserEntity } from '../users/entities/user.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { FileVisibility } from './enums/file-visibility.enum';
 
 @Injectable()
 export class FilesService {
   constructor(
     @InjectRepository(FileEntity)
-    private filesRepository: Repository<FileEntity>,
+    private readonly filesRepository: Repository<FileEntity>,
   ) {}
 
   async create(
     createFileDto: CreateFileDto,
-    user: UserEntity,
+    user: Partial<UserEntity>,
   ): Promise<FileEntity> {
     const now = new Date();
-    const expiryDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const expiryDate = new Date(now.getTime() + (createFileDto.expiresAt ?? 0));
 
     const file = this.filesRepository.create({
       ...createFileDto,
       user,
-      visibility: createFileDto.visibility || 'public',
+      visibility: createFileDto.visibility || FileVisibility.PUBLIC,
       expiresAt: expiryDate,
     });
 
@@ -43,8 +44,11 @@ export class FilesService {
     });
   }
 
-  async deleteFileFromDisk(filename: string): Promise<void> {
-    const filePath = path.join('./uploads', filename);
+  async deleteFileFromDisk(
+    targetDirectory: string,
+    filename: string,
+  ): Promise<void> {
+    const filePath = path.join(targetDirectory, filename);
     try {
       await fs.access(filePath);
       await fs.unlink(filePath);
@@ -60,5 +64,18 @@ export class FilesService {
 
   async findOne(id: number) {
     return this.filesRepository.findOne({ where: { id }, relations: ['user'] });
+  }
+
+  async findOrFailed(id: number, visibility: FileVisibility) {
+    const fileFounded: FileEntity | null = await this.filesRepository.findOne({
+      where: { id, visibility },
+      relations: ['user'],
+    });
+
+    if (!fileFounded) {
+      throw new NotFoundException('فایل مدنظر پیدا نشد');
+    }
+
+    return fileFounded;
   }
 }

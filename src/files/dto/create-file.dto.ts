@@ -1,4 +1,6 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { FileVisibility } from '../enums/file-visibility.enum';
+import { Transform } from 'class-transformer';
 
 export class CreateFileDto {
   @IsString()
@@ -15,5 +17,9 @@ export class CreateFileDto {
 
   @IsString()
   @IsOptional()
-  visibility?: 'public' | 'private';
+  visibility?: FileVisibility;
+
+  @IsNumber()
+  @IsOptional()
+  expiresAt?: number;
 }

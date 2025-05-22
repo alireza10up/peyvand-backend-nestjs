@@ -8,7 +8,7 @@ import {
 import { PostEntity } from '../../posts/entities/post.entity';
 import { FileEntity } from '../../files/entities/file.entity';
 
-@Entity()
+@Entity('users')
 export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;

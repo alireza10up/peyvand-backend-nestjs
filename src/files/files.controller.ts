@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Delete,
   Get,
@@ -18,50 +17,66 @@ import { FilePrivateGuard } from './guards/file-private.guard';
 import { ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { UserEntity } from '../users/entities/user.entity';
+import { UploadedFile as UploadedFileInterface } from './interfaces/uploaded-file.interface';
+import { FileVisibility } from './enums/file-visibility.enum';
+import { RequestWithUser } from './interfaces/request-with-user.interface';
 
-interface CustomRequest extends Request {
-  user: UserEntity;
-}
+const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const DEFAULT_FILE_EXPIRES_AT = 7 * 24 * 60 * 60 * 1000;
 
 @Controller('files')
 export class FilesController {
-  private uploadDestination: string;
-  private maxFileSize: number;
-  private allowedMimeTypes: string[];
+  private static uploadDestination: string;
+  private static maxFileSize: number;
+  private static allowedMimeTypes: string[];
+  private static fileExpiresAt: number;
 
   constructor(
     private readonly filesService: FilesService,
     private readonly configService: ConfigService,
   ) {
-    this.uploadDestination =
-      this.configService.get<string>('UPLOAD_DESTINATION') || './uploads';
-    this.maxFileSize =
-      this.configService.get<number>('UPLOAD_MAX_FILE_SIZE') ||
-      10 * 1024 * 1024; // 10MB
-    this.allowedMimeTypes = this.configService
-      .get<string>('UPLOAD_ALLOWED_MIME_TYPES')
-      ?.split(',') || ['image/jpeg', 'image/png', 'application/pdf'];
+    this.initializeConfiguration();
   }
 
-  @Post('upload')
+  private initializeConfiguration(): void {
+    FilesController.maxFileSize =
+      this.configService.get<number>('UPLOAD_MAX_FILE_SIZE') ||
+      DEFAULT_MAX_FILE_SIZE;
+
+    FilesController.uploadDestination = this.configService.get<string>(
+      'UPLOAD_DESTINATION',
+      'uploads',
+    );
+
+    FilesController.allowedMimeTypes = this.configService
+      .get<string>(
+        'UPLOAD_ALLOWED_MIME_TYPES',
+        'image/jpeg,image/png,application/pdf',
+      )
+      ?.split(',');
+
+    FilesController.fileExpiresAt = Number(
+      this.configService.get<number>('FILE_EXPIRES_AT') ??
+        DEFAULT_FILE_EXPIRES_AT,
+    );
+  }
+
+  @Post('private/upload')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
+        filename: (req, file: UploadedFileInterface, cb) => {
+          const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
           cb(null, uniqueSuffix + extname(file.originalname));
         },
       }),
       limits: {
-        fileSize: this.maxFileSize,
+        fileSize: FilesController.maxFileSize,
       },
-      fileFilter: (req, file, cb) => {
-        const mimetype = file.mimetype as string; // مشخص کردن نوع فایل
-        if (this.allowedMimeTypes.includes(mimetype)) {
+      fileFilter: (req, file: UploadedFileInterface, cb) => {
+        if (FilesController.allowedMimeTypes.includes(file.mimetype)) {
           cb(null, true);
         } else {
           cb(new BadRequestException('نوع فایل مجاز نیست'), false);
@@ -69,21 +84,59 @@ export class FilesController {
       },
     }),
   )
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Request() req: CustomRequest,
-    @Body('visibility') visibility: 'public' | 'private',
+  async uploadPrivateFile(
+    @UploadedFile() file: UploadedFileInterface,
+    @Request() req: RequestWithUser,
   ) {
-    const fileRecord = await this.filesService.create(
+    return this.filesService.create(
       {
         filename: file.filename,
         mimetype: file.mimetype,
-        url: `/uploads/${file.filename}`,
-        visibility: visibility || 'public',
+        url: `/${FilesController.uploadDestination}/${file.filename}`,
+        visibility: FileVisibility.PRIVATE,
+        expiresAt: FilesController.fileExpiresAt,
       },
       req.user,
     );
-    return fileRecord;
+  }
+
+  @Post('public/upload')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file: UploadedFileInterface, cb) => {
+          const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          cb(null, uniqueSuffix + extname(file.originalname));
+        },
+      }),
+      limits: {
+        fileSize: FilesController.maxFileSize,
+      },
+      fileFilter: (req, file: UploadedFileInterface, cb) => {
+        if (FilesController.allowedMimeTypes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('نوع فایل مجاز نیست'), false);
+        }
+      },
+    }),
+  )
+  async uploadPublicFile(
+    @UploadedFile() file: UploadedFileInterface,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.filesService.create(
+      {
+        filename: file.filename,
+        mimetype: file.mimetype,
+        url: `/${FilesController.uploadDestination}/${file.filename}`,
+        visibility: FileVisibility.PUBLIC,
+        expiresAt: FilesController.fileExpiresAt,
+      },
+      { id: req.user.id },
+    );
   }
 
   @Delete(':id')
@@ -93,10 +146,11 @@ export class FilesController {
     if (!file) {
       throw new BadRequestException('فایل یافت نشد');
     }
-
-    await this.filesService.deleteFileFromDisk(file.filename);
+    await this.filesService.deleteFileFromDisk(
+      FilesController.uploadDestination,
+      file.filename,
+    );
     await this.filesService.remove(+id);
-
     return { message: 'فایل با موفقیت حذف شد' };
   }
 
@@ -107,14 +161,15 @@ export class FilesController {
     return { message: 'فایل از صف پاکسازی حذف شد' };
   }
 
-  @Get(':id')
-  @UseGuards(FilePrivateGuard)
+  @Get('private/:id')
+  @UseGuards(JwtAuthGuard, FilePrivateGuard)
   async getPrivateFile(@Param('id') id: string) {
-    return this.filesService.findOne(+id);
+    return this.filesService.findOrFailed(+id, FileVisibility.PRIVATE);
   }
 
   @Get('public/:id')
+  @UseGuards(JwtAuthGuard)
   async getPublicFile(@Param('id') id: string) {
-    return this.filesService.findOne(+id);
+    return this.filesService.findOrFailed(+id, FileVisibility.PUBLIC);
   }
 }

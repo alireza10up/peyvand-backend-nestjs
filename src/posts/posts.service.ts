@@ -12,8 +12,6 @@ export class PostsService {
   constructor(
     @InjectRepository(PostEntity)
     private postsRepository: Repository<PostEntity>,
-    @InjectRepository(FileEntity)
-    private filesRepository: Repository<FileEntity>,
   ) {}
 
   async create(
@@ -23,10 +21,10 @@ export class PostsService {
     const files: FileEntity[] = [];
 
     if (createPostDto.fileIds && createPostDto.fileIds.length > 0) {
-      const foundFile = await this.filesRepository.findOne({
-        where: { id: createPostDto.fileIds[0] },
-      });
-      if (foundFile) files.push(foundFile);
+      // const foundFile = await this.filesRepository.findOne({
+      //   where: { id: createPostDto.fileIds[0] },
+      // });
+      // if (foundFile) files.push(foundFile);
     }
 
     const post = this.postsRepository.create({
@@ -65,24 +63,24 @@ export class PostsService {
       throw new NotFoundException('Post not found');
     }
 
-    let file = post.files;
+    let files = post.files;
 
     if (updatePostDto.fileIds && updatePostDto.fileIds.length > 0) {
-      const foundFile = await this.filesRepository.findOne({
-        where: { id: updatePostDto.fileIds[0] },
-      });
-      if (foundFile) {
-        file = foundFile;
-      }
+      // const foundFile = await this.filesRepository.findOne({
+      //   where: { id: updatePostDto.fileIds[0] },
+      // });
+      // if (foundFile) {
+      //   files.push(foundFile);
+      // }
     }
-    Object.assign(post, updatePostDto, { file });
+    Object.assign(post, updatePostDto, { files });
     return this.postsRepository.save(post);
   }
 
   async remove(id: number, user: UserEntity): Promise<void> {
     const post = await this.postsRepository.findOne({
       where: { id },
-      relations: ['author', 'file'],
+      relations: ['user', 'files'],
     });
 
     if (!post) {

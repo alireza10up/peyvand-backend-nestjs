@@ -16,7 +16,7 @@ export class PostVisibilityGuard implements CanActivate {
     const postId = request.params.id;
     if (!postId) return true;
     const post = await this.postsService.findOne(+postId);
-    if (post.status !== 'published' && (!user || post.author.id !== user.id)) {
+    if (post.status !== 'published' && (!user || post.user.id !== user.id)) {
       throw new ForbiddenException('شما مجاز به دیدن این پست نیستید.');
     }
     return true;

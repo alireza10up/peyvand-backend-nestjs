@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
+import { FileVisibility } from '../enums/file-visibility.enum';
 
 @Entity('files')
 export class FileEntity {
@@ -23,8 +24,8 @@ export class FileEntity {
   @Column({ length: 255 })
   url: string;
 
-  @Column({ default: 'public' })
-  visibility: 'public' | 'private';
+  @Column({ default: FileVisibility.PUBLIC })
+  visibility: FileVisibility;
 
   @ManyToOne(() => UserEntity, (user) => user.files, {
     nullable: true,
