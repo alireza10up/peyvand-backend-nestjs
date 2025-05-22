@@ -1,8 +1,9 @@
 import {
   Column,
   Entity,
-  ManyToOne,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { PostEntity } from '../../posts/entities/post.entity';
@@ -37,6 +38,7 @@ export class UserEntity {
   @OneToMany(() => FileEntity, (file) => file.user)
   files: FileEntity[];
 
-  @ManyToOne(() => FileEntity, { nullable: true })
-  profileFile: FileEntity;
+  @OneToOne(() => FileEntity, { nullable: true, eager: true })
+  @JoinColumn()
+  profile_file: FileEntity | null;
 }

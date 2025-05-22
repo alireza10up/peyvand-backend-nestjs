@@ -19,7 +19,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { UploadedFile as UploadedFileInterface } from './interfaces/uploaded-file.interface';
 import { FileVisibility } from './enums/file-visibility.enum';
-import { RequestWithUser } from './interfaces/request-with-user.interface';
+import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 
 const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const DEFAULT_FILE_EXPIRES_AT = 7 * 24 * 60 * 60 * 1000;

@@ -14,11 +14,17 @@ export class PostOwnerGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const postId = request.params.id;
-    if (!postId) return false;
+
+    if (!postId) {
+      return false;
+    }
+
     const post = await this.postsService.findOne(+postId);
+
     if (!user || post.user.id !== user.id) {
       throw new ForbiddenException('شما مجوز ویرایش این پست را ندارید.');
     }
+
     return true;
   }
 }

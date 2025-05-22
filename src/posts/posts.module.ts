@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
 import { PostEntity } from './entities/post.entity';
-import { FilesService } from '../files/files.service';
 import { PostVisibilityGuard } from './guards/post-visibility.guard';
 import { PostOwnerGuard } from './guards/post-owner.guard';
 import { FilesModule } from '../files/files.module';

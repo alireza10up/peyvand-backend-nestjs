@@ -26,6 +26,8 @@ export class AuthService {
       throw new ConflictException('این ایمیل از قبل وجود دارد');
     }
 
+    registerDto.password = await bcrypt.hash(registerDto.password, 10);
+
     const user: UserEntity | undefined =
       await this.usersService.create(registerDto);
 

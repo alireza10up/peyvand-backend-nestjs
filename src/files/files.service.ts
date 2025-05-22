@@ -78,4 +78,13 @@ export class FilesService {
 
     return fileFounded;
   }
+
+  async isPublic(id: number): Promise<boolean> {
+    const fileFounded: FileEntity | null = await this.filesRepository.findOne({
+      where: { id, visibility: FileVisibility.PUBLIC },
+      relations: ['user'],
+    });
+
+    return !!fileFounded;
+  }
 }

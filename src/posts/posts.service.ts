@@ -45,7 +45,11 @@ export class PostsService {
       where: { id },
       relations: ['author', 'file'],
     });
-    if (!post) throw new NotFoundException('Post not found');
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
     return post;
   }
 
