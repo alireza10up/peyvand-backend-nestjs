@@ -10,3 +10,8 @@ DB_NAME=peyvand
 # JWT
 JWT_SECRET=peyvand
 JWT_EXPIRES_IN=1d
+
+# UPLOADS
+UPLOAD_DESTINATION=uploads
+UPLOAD_MAX_FILE_SIZE=10000پ
+UPLOAD_ALLOWED_MIME_TYPES=image/jpeg,image/png,application/pdf

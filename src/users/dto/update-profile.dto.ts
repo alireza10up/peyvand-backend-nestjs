@@ -1,8 +1,9 @@
 import {
+  IsDateString,
+  IsNumber,
   IsOptional,
   IsString,
   Length,
-  IsDateString,
   ValidateIf,
 } from 'class-validator';
 
@@ -40,4 +41,8 @@ export class UpdateProfileDto {
     message: 'کد دانشجویی باید بین ۱ تا ۱۲۸ کاراکتر باشد',
   })
   student_code?: string | null;
+
+  @IsOptional()
+  @IsNumber()
+  profile_file?: number;
 }

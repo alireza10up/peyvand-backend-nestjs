@@ -9,7 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../users/entities/user.entity';
+import { UserEntity } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -19,14 +19,17 @@ export class AuthService {
   ) {}
 
   async signUp(registerDto: RegisterDto) {
-    const existingUser: Partial<User> | null =
+    const existingUser: Partial<UserEntity> | null =
       await this.usersService.findByEmailForAuth(registerDto.email);
 
     if (existingUser) {
       throw new ConflictException('این ایمیل از قبل وجود دارد');
     }
 
-    const user: User | undefined = await this.usersService.create(registerDto);
+    registerDto.password = await bcrypt.hash(registerDto.password, 10);
+
+    const user: UserEntity | undefined =
+      await this.usersService.create(registerDto);
 
     if (!user) {
       throw new InternalServerErrorException('خطای داخلی سرور');
@@ -41,7 +44,7 @@ export class AuthService {
   }
 
   async signIn(loginDto: LoginDto): Promise<string> {
-    const user: Partial<User> | null = await this.validateUser(
+    const user: Partial<UserEntity> | null = await this.validateUser(
       loginDto.email,
       loginDto.password,
     );
@@ -61,8 +64,8 @@ export class AuthService {
   async validateUser(
     email: string,
     password: string,
-  ): Promise<Partial<User> | null> {
-    const user: Partial<User> | null =
+  ): Promise<Partial<UserEntity> | null> {
+    const user: Partial<UserEntity> | null =
       await this.usersService.findByEmailForAuth(email);
 
     if (user?.password && (await bcrypt.compare(password, user.password))) {

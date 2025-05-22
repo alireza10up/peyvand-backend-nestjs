@@ -1,4 +1,10 @@
-import { IsEmail, IsString, MaxLength, MinLength, IsNotEmpty } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MaxLength,
+  MinLength,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class LoginDto {
   @IsNotEmpty({ message: 'ایمیل نمی‌تواند خالی باشد' })

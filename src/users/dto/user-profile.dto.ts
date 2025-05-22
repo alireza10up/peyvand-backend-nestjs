@@ -5,4 +5,5 @@ export class UserProfileDto {
   last_name?: string;
   birth_date?: Date;
   student_code?: string;
+  profile_file?: number;
 }

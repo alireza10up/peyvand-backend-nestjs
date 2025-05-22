@@ -4,9 +4,13 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { CommonModule } from './common/common.module';
+import { PostsModule } from './posts/posts.module';
+import { FilesModule } from './files/files.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -15,6 +19,8 @@ import { CommonModule } from './common/common.module';
     AuthModule,
     UsersModule,
     CommonModule,
+    PostsModule,
+    FilesModule,
   ],
   providers: [],
 })
