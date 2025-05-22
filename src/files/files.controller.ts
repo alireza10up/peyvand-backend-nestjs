@@ -135,7 +135,7 @@ export class FilesController {
         visibility: FileVisibility.PUBLIC,
         expiresAt: FilesController.fileExpiresAt,
       },
-      { id: req.user.id },
+      req.user,
     );
   }
 
@@ -143,14 +143,17 @@ export class FilesController {
   @UseGuards(JwtAuthGuard, FilePrivateGuard)
   async deleteFile(@Param('id') id: string) {
     const file = await this.filesService.findOne(+id);
+
     if (!file) {
       throw new BadRequestException('فایل یافت نشد');
     }
+
     await this.filesService.deleteFileFromDisk(
       FilesController.uploadDestination,
       file.filename,
     );
     await this.filesService.remove(+id);
+
     return { message: 'فایل با موفقیت حذف شد' };
   }
 

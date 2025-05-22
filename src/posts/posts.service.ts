@@ -1,30 +1,42 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { PostEntity } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { UserEntity } from '../users/entities/user.entity';
 import { FileEntity } from '../files/entities/file.entity';
+import { FilesService } from 'src/files/files.service';
+import { PostStatus } from './post-status.enum';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(PostEntity)
-    private postsRepository: Repository<PostEntity>,
+    private readonly postsRepository: Repository<PostEntity>,
+    private readonly filesService: FilesService,
   ) {}
 
   async create(
     createPostDto: CreatePostDto,
-    user: UserEntity,
+    user: Partial<UserEntity>,
   ): Promise<PostEntity> {
-    const files: FileEntity[] = [];
+    let files: FileEntity[] = [];
 
-    if (createPostDto.fileIds && createPostDto.fileIds.length > 0) {
-      // const foundFile = await this.filesRepository.findOne({
-      //   where: { id: createPostDto.fileIds[0] },
-      // });
-      // if (foundFile) files.push(foundFile);
+    if (createPostDto.file_ids && createPostDto.file_ids.length > 0) {
+      if (createPostDto.file_ids.length > 10) {
+        throw new ConflictException('بیشتر از 10 فایل ارسال شده است.');
+      }
+
+      files = await this.filesService.validatePublicFiles(
+        createPostDto.file_ids,
+      );
+
+      await this.filesService.markFilesAsUsed(createPostDto.file_ids);
     }
 
     const post = this.postsRepository.create({
@@ -37,17 +49,21 @@ export class PostsService {
   }
 
   findAll(): Promise<PostEntity[]> {
-    return this.postsRepository.find({ relations: ['author', 'file'] });
+    return this.postsRepository.find({
+      where: { status: PostStatus.PUBLISHED },
+      relations: ['user', 'files'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async findOne(id: number): Promise<PostEntity> {
     const post = await this.postsRepository.findOne({
       where: { id },
-      relations: ['author', 'file'],
+      relations: ['user', 'files'],
     });
 
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException('پست یافت نشد');
     }
 
     return post;
@@ -56,41 +72,33 @@ export class PostsService {
   async update(
     id: number,
     updatePostDto: UpdatePostDto,
-    user: UserEntity,
-  ): Promise<PostEntity> {
-    const post = await this.postsRepository.findOne({
-      where: { id },
-      relations: ['author', 'file'],
-    });
-
-    if (!post) {
-      throw new NotFoundException('Post not found');
-    }
-
-    let files = post.files;
-
-    if (updatePostDto.fileIds && updatePostDto.fileIds.length > 0) {
-      // const foundFile = await this.filesRepository.findOne({
-      //   where: { id: updatePostDto.fileIds[0] },
-      // });
-      // if (foundFile) {
-      //   files.push(foundFile);
-      // }
-    }
-    Object.assign(post, updatePostDto, { files });
-    return this.postsRepository.save(post);
-  }
-
-  async remove(id: number, user: UserEntity): Promise<void> {
+  ): Promise<PostEntity | null> {
     const post = await this.postsRepository.findOne({
       where: { id },
       relations: ['user', 'files'],
     });
 
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException('پست یافت نشد');
     }
 
-    await this.postsRepository.delete(id);
+    await this.postsRepository.update(id, updatePostDto);
+
+    return this.findOne(id);
+  }
+
+  async remove(id: number): Promise<boolean> {
+    const post = await this.postsRepository.findOne({
+      where: { id },
+      relations: ['user', 'files'],
+    });
+
+    if (!post) {
+      throw new NotFoundException('پست یافت نشد');
+    }
+
+    const deleteResult: DeleteResult = await this.postsRepository.delete(id);
+
+    return !!((deleteResult.affected ?? 0) > 0);
   }
 }

@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
 import { FileEntity } from '../../files/entities/file.entity';
+import { PostStatus } from '../post-status.enum';
 
 @Entity('posts')
 export class PostEntity {
@@ -26,10 +27,10 @@ export class PostEntity {
 
   @Column({
     type: 'enum',
-    enum: ['draft', 'published', 'archived'],
-    default: 'draft',
+    enum: PostStatus,
+    default: PostStatus.DRAFT,
   })
-  status: 'draft' | 'published' | 'archived';
+  status: PostStatus;
 
   @OneToMany(() => FileEntity, (file) => file.post)
   files: FileEntity[];

@@ -62,6 +62,9 @@ export class UsersService {
       if (!isFilePublic) {
         throw new ConflictException('فایل پروفایل شما غیر مجاز است');
       }
+
+      // Mark File To Used
+      await this.filesService.markFileAsUsed(updateData.profile_file);
     }
 
     const cleanUpdateData: Record<string, any> = {};

@@ -11,5 +11,5 @@ export class CreatePostDto {
 
   @IsArray()
   @IsOptional()
-  fileIds?: number[];
+  file_ids?: number[];
 }
