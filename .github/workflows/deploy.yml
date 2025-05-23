@@ -21,46 +21,71 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         
+      - name: Show Deployment Config
+        run: |
+          echo "🚀 Deployment Configurations:"
+          echo "  PROJECT_NAME: ${{ secrets.PROJECT_NAME }}"
+          echo "  BRANCH_NAME: ${{ secrets.BRANCH_NAME }}"
+          echo "  SERVER_IP: ${{ secrets.SERVER_IP }}"
+          echo "  SERVER_PORT: ${{ secrets.SERVER_PORT }}"
+          echo "  SERVER_USER: ${{ secrets.SERVER_USER }}"
+          echo "  PROJECT_DIR: ${{ secrets.PROJECT_DIR }}"
+          echo "  PM2_PROCESS_NAME: ${{ secrets.PM2_PROCESS_NAME }}"
+          echo "  REPO_URL: ${{ secrets.REPO_URL }}"
+
       - name: Setup SSH
         run: |
+          echo "🔐 Setting up SSH key..."
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          
+          echo "✅ SSH setup completed."
+
       - name: Test SSH Connection
         run: |
+          echo "🔌 Testing SSH connection to ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:$(( ${{ secrets.SERVER_PORT }} )) ..."
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo '✅ SSH Connection Successful'"
           
       - name: Deploy to Server
         run: |
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            echo "🚀 Starting Deployment for ${{ secrets.PROJECT_NAME }}..."
+          echo "🚀 Starting deployment on server..."
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} bash -s << 'EOF'
+            echo "📂 Navigating to home directory..."
             cd /home/${{ secrets.SERVER_USER }}
-          
+
+            echo "🔍 Checking if project directory exists and is a git repo..."
             if [ ! -d "${{ secrets.PROJECT_DIR }}/.git" ]; then
-              echo "⚠️ Repository not found, cloning again..."
-              GIT_SSH_COMMAND="ssh -i ~/.ssh/${{ secrets.DEPLOY_KEY_NAME }} -o StrictHostKeyChecking=no" git clone ${{ secrets.REPO_URL }} ${{ secrets.PROJECT_DIR }}
+              echo "⚠️ Repository not found, cloning repository..."
+              git clone ${{ secrets.REPO_URL }} ${{ secrets.PROJECT_DIR }}
+            else
+              echo "✅ Repository found."
             fi
-          
+
             cd ${{ secrets.PROJECT_DIR }}
+
+            echo "🔄 Resetting local changes and pulling latest code from branch '${{ secrets.BRANCH_NAME }}'..."
             git reset --hard
-            GIT_SSH_COMMAND="ssh -i ~/.ssh/${{ secrets.DEPLOY_KEY_NAME }} -o StrictHostKeyChecking=no" git pull origin ${{ secrets.BRANCH_NAME }}
+            git pull origin ${{ secrets.BRANCH_NAME }}
+
+            echo "📦 Installing dependencies..."
             npm install --legacy-peer-deps
-          
-            # Create .env file from GitHub Secrets
+
+            echo "📝 Writing environment variables to .env file..."
             echo "${{ secrets.ENV_VARS }}" > .env
-          
+
+            echo "🏗️ Building project..."
             npm run build
-          
-            # Check if the PM2 process exists and restart or create it
+
+            echo "🔄 Managing PM2 process '${{ secrets.PM2_PROCESS_NAME }}'..."
             pm2 describe ${{ secrets.PM2_PROCESS_NAME }} > /dev/null
             if [ $? -eq 0 ]; then
               echo "✅ Restarting existing PM2 process..."
               pm2 restart ${{ secrets.PM2_PROCESS_NAME }}
             else
-              echo "⚠️ PM2 process not found, creating new one..."
+              echo "⚠️ PM2 process not found, starting a new one..."
               pm2 start npm --name "${{ secrets.PM2_PROCESS_NAME }}" -- run start
             fi
-            echo "✅ Deployment Finished for ${{ secrets.PROJECT_NAME }}!"
+
+            echo "✅ Deployment Finished!"
           EOF
