@@ -6,9 +6,10 @@ import {
   Get,
   Param,
   Patch,
-  Post as HttpPost,
+  Post,
   Request,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -17,12 +18,16 @@ import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { PostVisibilityGuard } from './guards/post-visibility.guard';
 import { PostOwnerGuard } from './guards/post-owner.guard';
 import { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
+import { LikesService } from '../likes/likes.service';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly likesService: LikesService,
+  ) {}
 
-  @HttpPost()
+  @Post()
   @UseGuards(JwtAuthGuard)
   create(
     @Body() createPostDto: CreatePostDto,
@@ -59,5 +64,51 @@ export class PostsController {
     }
 
     return { message: 'پست حذف شد' };
+  }
+
+  @Post(':id/like')
+  @UseGuards(JwtAuthGuard)
+  async likePost(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) postId: number,
+  ) {
+    const userId = req.user.id;
+    return this.likesService.likePost(userId, postId);
+  }
+
+  @Delete(':id/like')
+  @UseGuards(JwtAuthGuard)
+  async unlikePost(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) postId: number,
+  ) {
+    const userId = req.user.id;
+    await this.likesService.unlikePost(userId, postId);
+    return { message: 'لایک حذف شد' };
+  }
+
+  @Get(':id/likes/count')
+  async countLikes(@Param('id', ParseIntPipe) postId: number) {
+    const count = await this.likesService.countLikes(postId);
+    return { postId, count };
+  }
+
+  @Post(':id/like-toggle')
+  @UseGuards(JwtAuthGuard)
+  async toggleLike(
+    @Request() req: RequestWithUser,
+    @Param('id', ParseIntPipe) postId: number,
+  ) {
+    const userId = req.user.id;
+
+    const hasLiked = await this.likesService.hasUserLiked(userId, postId);
+
+    if (hasLiked) {
+      await this.likesService.unlikePost(userId, postId);
+      return { message: 'لایک حذف شد' };
+    } else {
+      await this.likesService.likePost(userId, postId);
+      return { message: 'لایک شد' };
+    }
   }
 }
