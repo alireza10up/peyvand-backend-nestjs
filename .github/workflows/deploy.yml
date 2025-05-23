@@ -1,91 +1,59 @@
-# Generic Deployment Template
-# Replace the following variables with your project-specific values:
-# - PROJECT_NAME: Name of your project (e.g., peyvand, fincho)
-# - BRANCH_NAME: Target branch (e.g., develop, main)
-# - SERVER_IP: Server IP address
-# - SERVER_PORT: SSH port
-# - SERVER_USER: SSH username
-# - PROJECT_DIR: Directory name on server
-# - PM2_PROCESS_NAME: PM2 process name
-# - REPO_URL: GitHub repository URL
+name: Deploy to Peyvand Server - Environment Development
 
-name: Deploy to Server - Environment Development
 on:
   push:
     branches:
-      - develop # Change this to your target branch
+      - develop
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        
-      - name: Show Deployment Config
-        run: |
-          echo "🚀 Deployment Configurations:"
-          echo "  PROJECT_NAME: ${{ secrets.PROJECT_NAME }}"
-          echo "  BRANCH_NAME: ${{ secrets.BRANCH_NAME }}"
-          echo "  SERVER_IP: ${{ secrets.SERVER_IP }}"
-          echo "  SERVER_PORT: ${{ secrets.SERVER_PORT }}"
-          echo "  SERVER_USER: ${{ secrets.SERVER_USER }}"
-          echo "  PROJECT_DIR: ${{ secrets.PROJECT_DIR }}"
-          echo "  PM2_PROCESS_NAME: ${{ secrets.PM2_PROCESS_NAME }}"
-          echo "  REPO_URL: ${{ secrets.REPO_URL }}"
 
       - name: Setup SSH
         run: |
-          echo "🔐 Setting up SSH key..."
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          echo "✅ SSH setup completed."
+          ssh-keyscan -p 7544 -H 154.16.16.2 >> ~/.ssh/known_hosts
 
       - name: Test SSH Connection
         run: |
-          echo "🔌 Testing SSH connection to ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:$(( ${{ secrets.SERVER_PORT }} )) ..."
-          ssh -vvv -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo '✅ SSH Connection Successful'"
-          
+          ssh -i ~/.ssh/id_rsa -p 7544 -o StrictHostKeyChecking=no fincho@154.16.16.2 "echo '✅ SSH Connection Successful'"
+
       - name: Deploy to Server
         run: |
-          echo "🚀 Starting deployment on server..."
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} bash -s << 'EOF'
-            echo "📂 Navigating to home directory..."
-            cd /home/${{ secrets.SERVER_USER }}
+          ssh -i ~/.ssh/id_rsa -p 7544 fincho@154.16.16.2 << 'EOF'
+          echo "🚀 Starting Deployment..."
+          cd /home/fincho
 
-            echo "🔍 Checking if project directory exists and is a git repo..."
-            if [ ! -d "${{ secrets.PROJECT_DIR }}/.git" ]; then
-              echo "⚠️ Repository not found, cloning repository..."
-              git clone ${{ secrets.REPO_URL }} ${{ secrets.PROJECT_DIR }}
-            else
-              echo "✅ Repository found."
-            fi
+          if [ ! -d "peyvand-backend-nestjs/.git" ]; then
+            echo "⚠️ Repository not found, cloning again..."
+            GIT_SSH_COMMAND="ssh -i ~/.ssh/snapshare_rsa -o StrictHostKeyChecking=no" git clone git@github.com:alireza10up/peyvand-backend-nestjs.git peyvand-backend-nestjs
+          fi
 
-            cd ${{ secrets.PROJECT_DIR }}
+          cd peyvand-backend-nestjs
+          echo "📂 Current Directory: $(pwd)"
+          echo "📄 Directory Content:"
+          ls -la
+          
+          git reset --hard
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/snapshare_rsa -o StrictHostKeyChecking=no" git pull origin develop
+          npm install --legacy-peer-deps
 
-            echo "🔄 Resetting local changes and pulling latest code from branch '${{ secrets.BRANCH_NAME }}'..."
-            git reset --hard
-            git pull origin ${{ secrets.BRANCH_NAME }}
+          # Create .env file from GitHub Secrets
+          echo "${{ secrets.ENV_VARS }}" > .env
 
-            echo "📦 Installing dependencies..."
-            npm install --legacy-peer-deps
+          # Run migrations (در صورتی که وجود داشته باشه)
+          echo "🚀 Running Migrations..."
+          npm run migrate || echo "⚠️ No migration script found."
 
-            echo "📝 Writing environment variables to .env file..."
-            echo "${{ secrets.ENV_VARS }}" > .env
-
-            echo "🏗️ Building project..."
-            npm run build
-
-            echo "🔄 Managing PM2 process '${{ secrets.PM2_PROCESS_NAME }}'..."
-            pm2 describe ${{ secrets.PM2_PROCESS_NAME }} > /dev/null
-            if [ $? -eq 0 ]; then
-              echo "✅ Restarting existing PM2 process..."
-              pm2 restart ${{ secrets.PM2_PROCESS_NAME }}
-            else
-              echo "⚠️ PM2 process not found, starting a new one..."
-              pm2 start npm --name "${{ secrets.PM2_PROCESS_NAME }}" -- run start
-            fi
-
-            echo "✅ Deployment Finished!"
+          # Restart app with pm2
+          pm2 delete peyvand || true
+          pm2 start npm --name "peyvand" --cwd /home/fincho/peyvand-backend-nestjs -- run start
+          
+          echo "✅ Deployment Finished!"
           EOF
