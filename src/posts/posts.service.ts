@@ -11,7 +11,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { UserEntity } from '../users/entities/user.entity';
 import { FileEntity } from '../files/entities/file.entity';
 import { FilesService } from 'src/files/files.service';
-import { PostStatus } from './post-status.enum';
+import { PostStatus } from './enums/post-status.enum';
 
 @Injectable()
 export class PostsService {

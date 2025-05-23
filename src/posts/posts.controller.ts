@@ -5,11 +5,11 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Request,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -73,7 +73,10 @@ export class PostsController {
     @Param('id', ParseIntPipe) postId: number,
   ) {
     const userId = req.user.id;
-    return this.likesService.likePost(userId, postId);
+
+    await this.likesService.likePost(userId, postId);
+
+    return { message: 'پست لایک شد' };
   }
 
   @Delete(':id/like')
@@ -83,13 +86,16 @@ export class PostsController {
     @Param('id', ParseIntPipe) postId: number,
   ) {
     const userId = req.user.id;
+
     await this.likesService.unlikePost(userId, postId);
+
     return { message: 'لایک حذف شد' };
   }
 
   @Get(':id/likes/count')
   async countLikes(@Param('id', ParseIntPipe) postId: number) {
     const count = await this.likesService.countLikes(postId);
+
     return { postId, count };
   }
 
@@ -105,9 +111,11 @@ export class PostsController {
 
     if (hasLiked) {
       await this.likesService.unlikePost(userId, postId);
+
       return { message: 'لایک حذف شد' };
     } else {
       await this.likesService.likePost(userId, postId);
+
       return { message: 'لایک شد' };
     }
   }
