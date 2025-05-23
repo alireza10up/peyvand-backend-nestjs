@@ -1,0 +1,66 @@
+# Generic Deployment Template
+# Replace the following variables with your project-specific values:
+# - PROJECT_NAME: Name of your project (e.g., peyvand, fincho)
+# - BRANCH_NAME: Target branch (e.g., develop, main)
+# - SERVER_IP: Server IP address
+# - SERVER_PORT: SSH port
+# - SERVER_USER: SSH username
+# - PROJECT_DIR: Directory name on server
+# - PM2_PROCESS_NAME: PM2 process name
+# - REPO_URL: GitHub repository URL
+
+name: Deploy to Server - Environment Development
+on:
+  push:
+    branches:
+      - develop # Change this to your target branch
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          
+      - name: Test SSH Connection
+        run: |
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo '✅ SSH Connection Successful'"
+          
+      - name: Deploy to Server
+        run: |
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            echo "🚀 Starting Deployment for ${{ secrets.PROJECT_NAME }}..."
+            cd /home/${{ secrets.SERVER_USER }}
+          
+            if [ ! -d "${{ secrets.PROJECT_DIR }}/.git" ]; then
+              echo "⚠️ Repository not found, cloning again..."
+              GIT_SSH_COMMAND="ssh -i ~/.ssh/${{ secrets.DEPLOY_KEY_NAME }} -o StrictHostKeyChecking=no" git clone ${{ secrets.REPO_URL }} ${{ secrets.PROJECT_DIR }}
+            fi
+          
+            cd ${{ secrets.PROJECT_DIR }}
+            git reset --hard
+            GIT_SSH_COMMAND="ssh -i ~/.ssh/${{ secrets.DEPLOY_KEY_NAME }} -o StrictHostKeyChecking=no" git pull origin ${{ secrets.BRANCH_NAME }}
+            npm install --legacy-peer-deps
+          
+            # Create .env file from GitHub Secrets
+            echo "${{ secrets.ENV_VARS }}" > .env
+          
+            npm run build
+          
+            # Check if the PM2 process exists and restart or create it
+            pm2 describe ${{ secrets.PM2_PROCESS_NAME }} > /dev/null
+            if [ $? -eq 0 ]; then
+              echo "✅ Restarting existing PM2 process..."
+              pm2 restart ${{ secrets.PM2_PROCESS_NAME }}
+            else
+              echo "⚠️ PM2 process not found, creating new one..."
+              pm2 start npm --name "${{ secrets.PM2_PROCESS_NAME }}" -- run start
+            fi
+            echo "✅ Deployment Finished for ${{ secrets.PROJECT_NAME }}!"
+          EOF
