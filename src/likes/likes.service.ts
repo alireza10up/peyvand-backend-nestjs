@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Like } from './entities/like.entity';
@@ -18,15 +22,14 @@ export class LikesService {
     const post = await this.postRepository.findOne({ where: { id: postId } });
 
     if (!post) {
-        throw new NotFoundException('پست یافت نشد')
-    };
-
+      throw new NotFoundException('پست یافت نشد');
+    }
     const existing = await this.likeRepository.findOne({
       where: { user: { id: userId }, post: { id: postId } },
     });
-    
+
     if (existing) {
-        throw new ConflictException('قبلاً لایک کرده‌اید');
+      throw new ConflictException('قبلاً لایک کرده‌اید');
     }
 
     const like = this.likeRepository.create({
@@ -43,9 +46,9 @@ export class LikesService {
     });
 
     if (!like) {
-        throw new NotFoundException('لایک پیدا نشد')
-    };
-    
+      throw new NotFoundException('لایک پیدا نشد');
+    }
+
     await this.likeRepository.delete(like.id);
   }
 
