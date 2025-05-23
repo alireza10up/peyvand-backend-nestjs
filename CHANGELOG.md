@@ -1,4 +1,12 @@
+# [0.4.0]
+
+## feature
+
+- add deploy workflow for ci cd
+
 # [0.3.0]
+
+## feature
 
 - likes: add and implement module likes
 - posts: implement like posts
