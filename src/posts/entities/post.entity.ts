@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
 import { FileEntity } from '../../files/entities/file.entity';
-import { PostStatus } from '../post-status.enum';
+import { PostStatus } from '../enums/post-status.enum';
 
 @Entity('posts')
 export class PostEntity {

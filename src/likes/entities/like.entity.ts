@@ -8,7 +8,7 @@ import { UserEntity } from '../../users/entities/user.entity';
 import { PostEntity } from '../../posts/entities/post.entity';
 
 @Entity('likes')
-export class Like {
+export class LikeEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

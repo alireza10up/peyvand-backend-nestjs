@@ -5,25 +5,26 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Like } from './entities/like.entity';
+import { LikeEntity } from './entities/like.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { PostEntity } from '../posts/entities/post.entity';
 
 @Injectable()
 export class LikesService {
   constructor(
-    @InjectRepository(Like)
-    private readonly likeRepository: Repository<Like>,
+    @InjectRepository(LikeEntity)
+    private readonly likeRepository: Repository<LikeEntity>,
     @InjectRepository(PostEntity)
     private readonly postRepository: Repository<PostEntity>,
   ) {}
 
-  async likePost(userId: number, postId: number): Promise<Like> {
+  async likePost(userId: number, postId: number): Promise<LikeEntity> {
     const post = await this.postRepository.findOne({ where: { id: postId } });
 
     if (!post) {
       throw new NotFoundException('پست یافت نشد');
     }
+
     const existing = await this.likeRepository.findOne({
       where: { user: { id: userId }, post: { id: postId } },
     });
