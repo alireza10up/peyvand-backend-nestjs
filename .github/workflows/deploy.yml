@@ -45,7 +45,7 @@ jobs:
       - name: Test SSH Connection
         run: |
           echo "🔌 Testing SSH connection to ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:$(( ${{ secrets.SERVER_PORT }} )) ..."
-          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo '✅ SSH Connection Successful'"
+          ssh -vvv -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo '✅ SSH Connection Successful'"
           
       - name: Deploy to Server
         run: |
