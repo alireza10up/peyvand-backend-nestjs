@@ -1,15 +1,20 @@
+# [0.3.0]
+
+- likes: add and implement module likes
+- posts: implement like posts
+
 # [0.2.0]
 
-# fix
+## fix
 
 - auth: fix jwt check guard
 
-# improvement
+## improvement
 
 - users: improve upload profile scenario
 - auth: encrypt password before save
 
-# feature
+## feature
 
 - posts: add endpoints crud
 - files: add endpoints crud
@@ -17,13 +22,13 @@
 
 # [0.1.1]
 
-# feature
+## feature
 
 - auth: add endpoint signup and sign in
 - users: add endpoint update profile and get profile
 
 # [0.1.0]
 
-# feature
+## feature
 
 - init
