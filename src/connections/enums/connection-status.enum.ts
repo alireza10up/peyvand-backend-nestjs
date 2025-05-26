@@ -3,4 +3,5 @@ export enum ConnectionStatus {
   PENDING = 'pending',
   REJECTED = 'rejected',
   BLOCKED = 'blocked',
+  NOT_SEND = 'not_send',
 }

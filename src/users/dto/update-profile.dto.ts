@@ -14,7 +14,7 @@ export class UpdateProfileDto {
   @Length(1, 128, {
     message: 'نام باید بین ۱ تا ۱۲۸ کاراکتر باشد',
   })
-  first_name?: string | null;
+  firstName?: string | null;
 
   @IsOptional()
   @ValidateIf((obj, value) => value !== null)
@@ -22,7 +22,7 @@ export class UpdateProfileDto {
   @Length(1, 128, {
     message: 'نام خانوادگی باید بین ۱ تا ۱۲۸ کاراکتر باشد',
   })
-  last_name?: string | null;
+  lastName?: string | null;
 
   @IsOptional()
   @ValidateIf((obj, value) => value !== null)
@@ -32,7 +32,7 @@ export class UpdateProfileDto {
       message: 'تاریخ تولد باید در قالب استاندارد تاریخ باشد',
     },
   )
-  birth_date?: string | null;
+  birthDate?: string | null;
 
   @IsOptional()
   @ValidateIf((obj, value) => value !== null)
@@ -40,9 +40,9 @@ export class UpdateProfileDto {
   @Length(1, 128, {
     message: 'کد دانشجویی باید بین ۱ تا ۱۲۸ کاراکتر باشد',
   })
-  student_code?: string | null;
+  studentCode?: string | null;
 
   @IsOptional()
   @IsNumber()
-  profile_file?: number;
+  profileFile?: number;
 }

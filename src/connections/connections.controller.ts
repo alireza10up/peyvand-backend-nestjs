@@ -39,19 +39,13 @@ export class ConnectionsController {
   ): Promise<ConnectionDto> {
     const currentUserId = req.user.id;
 
-    if (currentUserId === createConnectionDto.receiverId) {
-      throw new ForbiddenException(
-        'شما نمی‌توانید به خودتان درخواست ارتباط ارسال کنید.',
-      );
-    }
-
     return this.connectionsService.sendRequest(
       currentUserId,
       createConnectionDto,
     );
   }
 
-  @Delete('sent-requests/:requestId')
+  @Delete('send-request/:requestId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(ConnectionRequesterGuard)
   async cancelSentRequest(
@@ -126,9 +120,7 @@ export class ConnectionsController {
     @Param('userId', ParseIntPipe) otherUserId: number,
   ): Promise<ConnectionStatusWithUserDto> {
     const currentUserId = req.user.id;
-    if (currentUserId === otherUserId) {
-      return { userId: otherUserId, status: null, connectionId: undefined };
-    }
+
     return this.connectionsService.getConnectionStatusWithUser(
       currentUserId,
       otherUserId,
@@ -141,9 +133,7 @@ export class ConnectionsController {
     @Body() blockUserDto: BlockUserDto,
   ): Promise<ConnectionDto> {
     const currentUserId = req.user.id;
-    if (currentUserId === blockUserDto.userId) {
-      throw new ForbiddenException('شما نمی‌توانید خودتان را مسدود کنید.');
-    }
+
     return this.connectionsService.blockUser(
       currentUserId,
       blockUserDto.userId,

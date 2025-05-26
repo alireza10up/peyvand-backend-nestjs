@@ -369,8 +369,9 @@ export class ConnectionsService {
     otherUserId: number,
   ): Promise<ConnectionStatusWithUserDto> {
     if (currentUserId === otherUserId) {
-      return { userId: otherUserId, status: null, connectionId: undefined };
+      throw new ConflictException('منظورت چیه که وضعیتت با خودت چیه ؟');
     }
+
     await this.findUserOrFail(currentUserId);
     await this.findUserOrFail(otherUserId);
 
@@ -380,19 +381,10 @@ export class ConnectionsService {
     );
 
     if (!connection) {
-      return { userId: otherUserId, status: null, connectionId: undefined };
-    }
-
-    // Handle BLOCKED status: if blocked, from the perspective of the blocker or blocked, it's 'blocked'.
-    // If currentUserId is the requester and status is BLOCKED, it means currentUserId blocked otherUserId.
-    // If currentUserId is the receiver and status is BLOCKED, it means otherUserId blocked currentUserId.
-    // This needs careful thought on how 'BLOCKED' is defined (uni-directional or bi-directional visibility)
-    // For now, if a block exists, we'll return 'blocked'.
-    if (connection.status === ConnectionStatus.BLOCKED) {
       return {
         userId: otherUserId,
-        status: ConnectionStatus.BLOCKED,
-        connectionId: connection.id,
+        status: ConnectionStatus.NOT_SEND,
+        connectionId: undefined,
       };
     }
 
