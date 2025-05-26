@@ -1,12 +1,12 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
   Index,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
 import { ConnectionStatus } from '../enums/connection-status.enum';
@@ -42,9 +42,9 @@ export class ConnectionEntity {
   })
   status: ConnectionStatus;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
 }

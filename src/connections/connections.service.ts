@@ -1,14 +1,12 @@
 import {
   ConflictException,
   ForbiddenException,
-  forwardRef,
-  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ConnectionEntity } from './entities/connection.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { ConnectionStatus } from './enums/connection-status.enum';
@@ -24,9 +22,7 @@ export class ConnectionsService {
   constructor(
     @InjectRepository(ConnectionEntity)
     private readonly connectionRepository: Repository<ConnectionEntity>,
-    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
-    private readonly dataSource: DataSource, // For transactions if needed
   ) {}
 
   // --- Helper Methods ---
