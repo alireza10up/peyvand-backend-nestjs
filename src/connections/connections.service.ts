@@ -77,10 +77,8 @@ export class ConnectionsService {
 
     if (connection.requesterId === currentUserId) {
       dto.user = this.mapUserToUserSummaryDto(connection.receiver);
-      // dto.initiatedByMe = true; // If you add this field
     } else if (connection.receiverId === currentUserId) {
       dto.user = this.mapUserToUserSummaryDto(connection.requester);
-      // dto.initiatedByMe = false; // If you add this field
     } else {
       // This case might occur if an admin is viewing or for a generic "other user" context
       // For now, assuming context implies currentUserId is one of the participants

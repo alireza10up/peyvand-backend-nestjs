@@ -46,7 +46,6 @@ export class ConnectionParticipantGuard implements CanActivate {
         );
       }
 
-      // (request as any).connectionEntity = connection; // Optional
       return true;
     } catch (error) {
       if (error instanceof NotFoundException) {

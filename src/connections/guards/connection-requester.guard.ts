@@ -21,7 +21,9 @@ export class ConnectionRequesterGuard implements CanActivate {
     if (!currentUserId || !requestIdString) {
       throw new ForbiddenException('شما درخواست‌دهنده این ارتباط نیستید.');
     }
+
     const requestId = parseInt(requestIdString, 10);
+
     if (isNaN(requestId)) {
       throw new ForbiddenException('شناسه درخواست نامعتبر است.');
     }
@@ -42,7 +44,6 @@ export class ConnectionRequesterGuard implements CanActivate {
         );
       }
 
-      // (request as any).connectionEntity = connection; // Optional
       return true;
     } catch (error) {
       if (error instanceof NotFoundException) {

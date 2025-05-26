@@ -4,5 +4,5 @@ import { ConnectionStatus } from '../enums/connection-status.enum';
 export class UpdateConnectionStatusDto {
   @IsEnum(ConnectionStatus)
   @IsNotEmpty()
-  status: ConnectionStatus; //  This would typically only be for ACCEPTED or REJECTED by the receiver
+  status: ConnectionStatus;
 }

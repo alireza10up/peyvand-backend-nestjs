@@ -7,8 +7,4 @@ export class ConnectionDto {
   user: UserSummaryDto | null; // Represents the other user in the connection
   createdAt: Date;
   updatedAt: Date;
-  // Optional: To explicitly know if the current user initiated the request
-  // This is particularly useful when the status is PENDING.
-  // For ACCEPTED connections, it might be less relevant or derivable.
-  // initiatedByMe?: boolean;
 }
