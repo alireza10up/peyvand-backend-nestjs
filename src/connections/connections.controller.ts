@@ -21,11 +21,10 @@ import { ConnectionDto } from './dto/connection.dto';
 import { UserSummaryDto } from '../users/dto/user-summary.dto';
 import { ConnectionStatusWithUserDto } from './dto/connection-status-with-user.dto';
 import { BlockUserDto } from './dto/block-user.dto';
-// Placeholder for custom guards we'll create later
-// import { CanSendRequestGuard } from './guards/can-send-request.guard';
+import { CanSendRequestGuard } from './guards/can-send-request.guard';
 import { ConnectionReceiverGuard } from './guards/connection-receiver.guard';
-// import { ConnectionRequesterGuard } from './guards/connection-requester.guard';
-// import { ConnectionParticipantGuard } from './guards/connection-participant.guard';
+import { ConnectionRequesterGuard } from './guards/connection-requester.guard';
+import { ConnectionParticipantGuard } from './guards/connection-participant.guard';
 
 @Controller('connections')
 @UseGuards(JwtAuthGuard)
@@ -33,7 +32,7 @@ export class ConnectionsController {
   constructor(private readonly connectionsService: ConnectionsService) {}
 
   @Post('send-request')
-  // @UseGuards(CanSendRequestGuard) // TODO: Implement this guard
+  @UseGuards(CanSendRequestGuard)
   async sendRequest(
     @Request() req: RequestWithUser,
     @Body() createConnectionDto: CreateConnectionRequestDto,
@@ -52,7 +51,7 @@ export class ConnectionsController {
 
   @Delete('sent-requests/:requestId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  // @UseGuards(ConnectionRequesterGuard) // TODO: Implement guard
+  @UseGuards(ConnectionRequesterGuard)
   async cancelSentRequest(
     @Request() req: RequestWithUser,
     @Param('requestId', ParseIntPipe) requestId: number,
@@ -83,7 +82,7 @@ export class ConnectionsController {
 
   @Delete(':connectionId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  // @UseGuards(ConnectionParticipantGuard) // TODO: Implement guard
+  @UseGuards(ConnectionParticipantGuard)
   async removeConnection(
     @Request() req: RequestWithUser,
     @Param('connectionId', ParseIntPipe) connectionId: number,

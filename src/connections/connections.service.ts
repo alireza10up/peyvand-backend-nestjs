@@ -39,7 +39,7 @@ export class ConnectionsService {
     return user;
   }
 
-  private async findConnectionBetweenUsers(
+  async findConnectionBetweenUsers(
     userId1: number,
     userId2: number,
   ): Promise<ConnectionEntity | null> {
@@ -55,27 +55,6 @@ export class ConnectionsService {
         'receiver.profileFile',
       ],
     });
-  }
-
-  private async findConnectionByIdOrFail(
-    connectionId: number,
-    relations: string[] = [
-      'requester',
-      'receiver',
-      'requester.profileFile',
-      'receiver.profileFile',
-    ],
-  ): Promise<ConnectionEntity> {
-    const connection = await this.connectionRepository.findOne({
-      where: { id: connectionId },
-      relations,
-    });
-    if (!connection) {
-      throw new NotFoundException(
-        `Connection with ID ${connectionId} not found.`,
-      );
-    }
-    return connection;
   }
 
   private mapUserToUserSummaryDto(user: UserEntity): UserSummaryDto | null {
@@ -126,6 +105,30 @@ export class ConnectionsService {
     return connections.map((conn) =>
       this.mapConnectionToDto(conn, currentUserId),
     );
+  }
+
+  async findConnectionByIdOrFail(
+    connectionId: number,
+    relations: string[] = [], // Default to no relations if not specified
+  ): Promise<ConnectionEntity> {
+    const connection = await this.connectionRepository.findOne({
+      where: { id: connectionId },
+      relations:
+        relations.length > 0
+          ? relations
+          : [
+              'requester',
+              'receiver',
+              'requester.profileFile',
+              'receiver.profileFile',
+            ], // Load default relations if none specified for general use
+    });
+    if (!connection) {
+      throw new NotFoundException(
+        `Connection with ID ${connectionId} not found.`,
+      );
+    }
+    return connection;
   }
 
   // --- Core Methods ---
