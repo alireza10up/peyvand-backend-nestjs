@@ -16,7 +16,7 @@ import {
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { ConnectionsService } from './connections.service';
 import { CreateConnectionRequestDto } from './dto/create-connection-request.dto';
-import { RequestWithUser } from '../common/interfaces/request-with-user.interface'; // Ensure this path is correct
+import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 import { ConnectionDto } from './dto/connection.dto';
 import { UserSummaryDto } from '../users/dto/user-summary.dto';
 import { ConnectionStatusWithUserDto } from './dto/connection-status-with-user.dto';
@@ -105,7 +105,7 @@ export class ConnectionsController {
     return this.connectionsService.getPendingSentRequests(currentUserId);
   }
 
-  @Get('') // Represents /connections (list of accepted connections)
+  @Get('')
   async getAcceptedConnections(
     @Request() req: RequestWithUser,
     // @Query() paginationOptions: any, // TODO: Add pagination DTO

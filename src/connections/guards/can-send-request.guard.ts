@@ -36,10 +36,14 @@ export class CanSendRequestGuard implements CanActivate {
     }
 
     try {
-      // Check if receiver exists
-      await this.usersService.findById(receiverId); // Throws NotFoundException if user doesn't exist
+      // Check if a receiver exists
+      const receiverExists = await this.usersService.findById(receiverId); // Throws NotFoundException if user doesn't exist
 
-      // Check for existing connection or block
+      if (!receiverExists) {
+        throw new NotFoundException('کاربر مدنظر یافت نشد.');
+      }
+
+      // Check for an existing connection or block
       const existingConnection =
         await this.connectionsService.findConnectionBetweenUsers(
           currentUserId,

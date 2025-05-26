@@ -44,7 +44,6 @@ export class ConnectionReceiverGuard implements CanActivate {
         throw new ForbiddenException('درخواست در وضعیت انتظار نیست.');
       }
 
-      // (request as any).connectionEntity = connection; // Optional: attach for controller
       return true;
     } catch (error) {
       if (error instanceof NotFoundException) {
