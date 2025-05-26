@@ -40,7 +40,7 @@ export class ConnectionsController {
     const currentUserId = req.user.id;
     if (currentUserId === createConnectionDto.receiverId) {
       throw new ForbiddenException(
-        'You cannot send a connection request to yourself.',
+        'شما نمی‌توانید به خودتان درخواست ارتباط ارسال کنید.',
       );
     }
     return this.connectionsService.sendRequest(
@@ -140,7 +140,7 @@ export class ConnectionsController {
   ): Promise<ConnectionDto> {
     const currentUserId = req.user.id;
     if (currentUserId === blockUserDto.userId) {
-      throw new ForbiddenException('You cannot block yourself.');
+      throw new ForbiddenException('شما نمی‌توانید خودتان را مسدود کنید.');
     }
     return this.connectionsService.blockUser(
       currentUserId,

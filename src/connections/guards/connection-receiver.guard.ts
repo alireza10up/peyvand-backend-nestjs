@@ -19,13 +19,13 @@ export class ConnectionReceiverGuard implements CanActivate {
     const requestIdString = request.params.requestId;
 
     if (!currentUserId || !requestIdString) {
-      throw new ForbiddenException();
+      throw new ForbiddenException('شما دریافت‌کننده این درخواست ارتباط نیستید.');
     }
 
     const requestId = parseInt(requestIdString, 10);
 
     if (isNaN(requestId)) {
-      throw new ForbiddenException('Invalid Request ID.');
+      throw new ForbiddenException('شناسه درخواست نامعتبر است.');
     }
 
     try {
@@ -36,12 +36,12 @@ export class ConnectionReceiverGuard implements CanActivate {
 
       if (connection.receiverId !== currentUserId) {
         throw new ForbiddenException(
-          'You are not authorized to perform this action.',
+          'شما مجاز به انجام این عملیات نیستید.',
         );
       }
 
       if (connection.status !== ConnectionStatus.PENDING) {
-        throw new ForbiddenException('Request is not in a pending state.');
+        throw new ForbiddenException('درخواست در وضعیت انتظار نیست.');
       }
 
       // (request as any).connectionEntity = connection; // Optional: attach for controller
@@ -56,7 +56,7 @@ export class ConnectionReceiverGuard implements CanActivate {
       }
 
       throw new InternalServerErrorException(
-        'Error validating connection receiver.',
+        'خطا در اعتبارسنجی گیرنده ارتباط.',
       );
     }
   }

@@ -34,7 +34,7 @@ export class ConnectionsService {
   private async findUserOrFail(userId: number): Promise<UserEntity> {
     const user = await this.usersService.findById(userId);
     if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found.`);
+      throw new NotFoundException(`کاربر با شناسه ${userId} یافت نشد.`);
     }
     return user;
   }
@@ -91,7 +91,7 @@ export class ConnectionsService {
       // This part might need adjustment based on specific use cases for viewing connections not directly involving the logged-in user.
       // For most user-facing endpoints, the queries should ensure currentUserId is a participant.
       throw new InternalServerErrorException(
-        'User mapping error in ConnectionDto',
+        'خطا در نگاشت کاربر در ConnectionDto',
       );
     }
 
@@ -125,7 +125,7 @@ export class ConnectionsService {
     });
     if (!connection) {
       throw new NotFoundException(
-        `Connection with ID ${connectionId} not found.`,
+        `ارتباط با شناسه ${connectionId} یافت نشد.`,
       );
     }
     return connection;
@@ -139,7 +139,7 @@ export class ConnectionsService {
   ): Promise<ConnectionDto> {
     if (requesterId === createDto.receiverId) {
       throw new ConflictException(
-        'Cannot send a connection request to yourself.',
+        'نمی‌توانید به خودتان درخواست ارتباط ارسال کنید.',
       );
     }
 
@@ -154,12 +154,12 @@ export class ConnectionsService {
     if (existingConnection) {
       if (existingConnection.status === ConnectionStatus.PENDING) {
         throw new ConflictException(
-          'A pending request already exists with this user.',
+          'یک درخواست در انتظار قبلاً با این کاربر وجود دارد.',
         );
       }
       if (existingConnection.status === ConnectionStatus.ACCEPTED) {
         throw new ConflictException(
-          'You are already connected with this user.',
+          'شما قبلاً با این کاربر ارتباط برقرار کرده‌اید.',
         );
       }
       if (existingConnection.status === ConnectionStatus.BLOCKED) {
@@ -170,7 +170,7 @@ export class ConnectionsService {
           (existingConnection.receiverId === requesterId &&
             existingConnection.status === ConnectionStatus.BLOCKED) // They blocked you (assuming BLOCKED is mutual or initiated by one party)
         ) {
-          throw new ConflictException('Unable to send request due to a block.');
+          throw new ConflictException('به دلیل مسدود بودن، امکان ارسال درخواست وجود ندارد.');
         }
       }
       // If REJECTED, allow sending a new request by creating a new one or updating the existing one.
@@ -205,7 +205,7 @@ export class ConnectionsService {
         }
       } else {
         throw new ConflictException(
-          'A connection or request in a non-pending/rejected state already exists.',
+          'یک ارتباط یا درخواست در وضعیت غیر از انتظار/رد شده قبلاً وجود دارد.',
         );
       }
     }
@@ -234,12 +234,12 @@ export class ConnectionsService {
 
     if (connection.receiverId !== currentUserId) {
       throw new ForbiddenException(
-        'You are not authorized to accept this request.',
+        'شما مجاز به پذیرش این درخواست نیستید.',
       );
     }
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException(
-        'This request is not pending and cannot be accepted.',
+        'این درخواست در انتظار نیست و نمی‌تواند پذیرفته شود.',
       );
     }
 
@@ -256,12 +256,12 @@ export class ConnectionsService {
 
     if (connection.receiverId !== currentUserId) {
       throw new ForbiddenException(
-        'You are not authorized to reject this request.',
+        'شما مجاز به رد این درخواست نیستید.',
       );
     }
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException(
-        'This request is not pending and cannot be rejected.',
+        'این درخواست در انتظار نیست و نمی‌تواند رد شود.',
       );
     }
 
@@ -278,11 +278,11 @@ export class ConnectionsService {
 
     if (connection.requesterId !== currentUserId) {
       throw new ForbiddenException(
-        'You are not authorized to cancel this request.',
+        'شما مجاز به لغو این درخواست نیستید.',
       );
     }
     if (connection.status !== ConnectionStatus.PENDING) {
-      throw new ConflictException('Only pending requests can be cancelled.');
+      throw new ConflictException('فقط درخواست‌های در انتظار قابل لغو هستند.');
     }
 
     await this.connectionRepository.delete(requestId);
@@ -298,10 +298,10 @@ export class ConnectionsService {
       connection.requesterId !== currentUserId &&
       connection.receiverId !== currentUserId
     ) {
-      throw new ForbiddenException('You are not part of this connection.');
+      throw new ForbiddenException('شما بخشی از این ارتباط نیستید.');
     }
     if (connection.status !== ConnectionStatus.ACCEPTED) {
-      throw new ConflictException('Only accepted connections can be removed.');
+      throw new ConflictException('فقط ارتباط‌های پذیرفته شده قابل حذف هستند.');
     }
     // Instead of deleting, you might want to set a status like 'TERMINATED' or 'UNFRIENDED'
     // For simplicity, we delete.
@@ -406,7 +406,7 @@ export class ConnectionsService {
     userIdToBlock: number,
   ): Promise<ConnectionDto> {
     if (blockerId === userIdToBlock) {
-      throw new ConflictException('You cannot block yourself.');
+      throw new ConflictException('شما نمی‌توانید خودتان را مسدود کنید.');
     }
     const blocker = await this.findUserOrFail(blockerId);
     const userToBlock = await this.findUserOrFail(userIdToBlock);
@@ -450,7 +450,7 @@ export class ConnectionsService {
 
   async unblockUser(blockerId: number, userIdToUnblock: number): Promise<void> {
     if (blockerId === userIdToUnblock) {
-      throw new ForbiddenException('Invalid operation.');
+      throw new ForbiddenException('عملیات نامعتبر است.');
     }
     await this.findUserOrFail(blockerId);
     await this.findUserOrFail(userIdToUnblock);
@@ -465,7 +465,7 @@ export class ConnectionsService {
 
     if (!connection) {
       throw new NotFoundException(
-        'No active block found from you to this user to unblock.',
+        'هیچ مسدودیت فعالی از سمت شما به این کاربر برای رفع مسدودیت یافت نشد.',
       );
     }
 

@@ -19,7 +19,7 @@ export class ConnectionRequesterGuard implements CanActivate {
     const requestIdString = request.params.requestId; // For sent-requests/:requestId
 
     if (!currentUserId || !requestIdString) {
-      throw new ForbiddenException();
+      throw new ForbiddenException('شما درخواست‌دهنده این ارتباط نیستید.');
     }
     const requestId = parseInt(requestIdString, 10);
     if (isNaN(requestId)) {
