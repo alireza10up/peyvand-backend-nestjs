@@ -7,10 +7,17 @@ import { PostVisibilityGuard } from './guards/post-visibility.guard';
 import { PostOwnerGuard } from './guards/post-owner.guard';
 import { FilesModule } from '../files/files.module';
 import { LikesModule } from '../likes/likes.module';
+import { PostExistsAndCommentableGuard } from './guards/post-exists-and-commentable.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PostEntity]), FilesModule, LikesModule],
   controllers: [PostsController],
-  providers: [PostsService, PostVisibilityGuard, PostOwnerGuard],
+  providers: [
+    PostsService,
+    PostVisibilityGuard,
+    PostOwnerGuard,
+    PostExistsAndCommentableGuard,
+  ],
+  exports: [PostsService],
 })
 export class PostsModule {}

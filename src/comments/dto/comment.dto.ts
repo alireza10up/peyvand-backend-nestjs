@@ -5,8 +5,7 @@ export class CommentDto {
   content: string;
   createdAt: Date;
   updatedAt: Date;
-  user: UserSummaryDto;
+  user: UserSummaryDto | null;
   parentId?: number | null;
   replyCount?: number;
-  replies?: CommentDto[];
 }
