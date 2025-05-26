@@ -62,9 +62,7 @@ export class ConnectionsService {
       return null;
     }
 
-    return plainToInstance(UserSummaryDto, user, {
-      excludeExtraneousValues: true,
-    });
+    return plainToInstance(UserSummaryDto, user);
   }
 
   private mapConnectionToDto(
@@ -203,6 +201,7 @@ export class ConnectionsService {
           existingConnection.status = ConnectionStatus.PENDING;
           const updatedConnection =
             await this.connectionRepository.save(existingConnection);
+
           return this.mapConnectionToDto(updatedConnection, requesterId);
         }
       } else {
