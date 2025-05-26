@@ -1,4 +1,4 @@
-# [0.4.0]
+# [0.5.0]
 
 ## Feature
 
@@ -7,10 +7,18 @@
 
 ## Improvement
 
-- core: Discussed and applied naming conventions (camelCase in TypeScript, snake_case for database columns where
+- Discussed and applied naming conventions (camelCase in TypeScript, snake_case for database columns where
   applicable).
 
+# [0.4.0]
+
+## feature
+
+- add deploy workflow for ci cd
+
 # [0.3.0]
+
+## feature
 
 - likes: add and implement module likes
 - posts: implement like posts

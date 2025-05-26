@@ -1,4 +1,5 @@
 ENV_MODE=dev
+PORT=9091
 
 # Database
 DB_HOST=localhost
@@ -13,5 +14,5 @@ JWT_EXPIRES_IN=1d
 
 # UPLOADS
 UPLOAD_DESTINATION=uploads
-UPLOAD_MAX_FILE_SIZE=10000پ
+UPLOAD_MAX_FILE_SIZE=10000
 UPLOAD_ALLOWED_MIME_TYPES=image/jpeg,image/png,application/pdf
