@@ -8,6 +8,7 @@ import { PostsModule } from './posts/posts.module';
 import { FilesModule } from './files/files.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConnectionsModule } from './connections/connections.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ConnectionsModule } from './connections/connections.module';
     PostsModule,
     FilesModule,
     ConnectionsModule,
+    CommentsModule,
   ],
   providers: [],
 })
