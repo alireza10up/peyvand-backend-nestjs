@@ -155,11 +155,13 @@ export class ConnectionsService {
           'یک درخواست در انتظار قبلاً با این کاربر وجود دارد.',
         );
       }
+
       if (existingConnection.status === ConnectionStatus.ACCEPTED) {
         throw new ConflictException(
           'شما قبلاً با این کاربر ارتباط برقرار کرده‌اید.',
         );
       }
+
       if (existingConnection.status === ConnectionStatus.BLOCKED) {
         // Check who blocked whom
         if (
@@ -219,10 +221,12 @@ export class ConnectionsService {
     });
 
     const savedConnection = await this.connectionRepository.save(newConnection);
+
     // Re-fetch to ensure relations are loaded for DTO mapping if not using { reload: true } or similar
     const freshlySavedConnection = await this.findConnectionByIdOrFail(
       savedConnection.id,
     );
+
     return this.mapConnectionToDto(freshlySavedConnection, requesterId);
   }
 
@@ -235,6 +239,7 @@ export class ConnectionsService {
     if (connection.receiverId !== currentUserId) {
       throw new ForbiddenException('شما مجاز به پذیرش این درخواست نیستید.');
     }
+
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException(
         'این درخواست در انتظار نیست و نمی‌تواند پذیرفته شود.',
@@ -255,6 +260,7 @@ export class ConnectionsService {
     if (connection.receiverId !== currentUserId) {
       throw new ForbiddenException('شما مجاز به رد این درخواست نیستید.');
     }
+
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException(
         'این درخواست در انتظار نیست و نمی‌تواند رد شود.',
@@ -275,6 +281,7 @@ export class ConnectionsService {
     if (connection.requesterId !== currentUserId) {
       throw new ForbiddenException('شما مجاز به لغو این درخواست نیستید.');
     }
+
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException('فقط درخواست‌های در انتظار قابل لغو هستند.');
     }
@@ -294,6 +301,7 @@ export class ConnectionsService {
     ) {
       throw new ForbiddenException('شما بخشی از این ارتباط نیستید.');
     }
+
     if (connection.status !== ConnectionStatus.ACCEPTED) {
       throw new ConflictException('فقط ارتباط‌های پذیرفته شده قابل حذف هستند.');
     }
