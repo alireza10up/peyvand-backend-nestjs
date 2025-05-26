@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { FileEntity } from '../../files/entities/file.entity';
+import { ConnectionEntity } from 'src/connections/entities/connection.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -41,4 +42,10 @@ export class UserEntity {
   @OneToOne(() => FileEntity, { nullable: true, eager: true })
   @JoinColumn()
   profile_file: FileEntity | null;
+
+  @OneToMany(() => ConnectionEntity, (connection) => connection.requester)
+  sentConnectionRequests: ConnectionEntity[];
+
+  @OneToMany(() => ConnectionEntity, (connection) => connection.receiver)
+  receivedConnectionRequests: ConnectionEntity[];
 }
