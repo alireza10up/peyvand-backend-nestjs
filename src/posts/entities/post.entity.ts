@@ -10,6 +10,7 @@ import {
 import { UserEntity } from '../../users/entities/user.entity';
 import { FileEntity } from '../../files/entities/file.entity';
 import { PostStatus } from '../enums/post-status.enum';
+import { CommentEntity } from '../../comments/entities/comment.entity';
 
 @Entity('posts')
 export class PostEntity {
@@ -34,6 +35,9 @@ export class PostEntity {
 
   @OneToMany(() => FileEntity, (file) => file.post)
   files: FileEntity[];
+
+  @OneToMany(() => CommentEntity, (comment) => comment.user)
+  comments: CommentEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

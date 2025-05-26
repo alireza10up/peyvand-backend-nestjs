@@ -1,14 +1,17 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { FileEntity } from '../../files/entities/file.entity';
 import { ConnectionEntity } from 'src/connections/entities/connection.entity';
+import { CommentEntity } from '../../comments/entities/comment.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -48,4 +51,13 @@ export class UserEntity {
 
   @OneToMany(() => ConnectionEntity, (connection) => connection.receiver)
   receivedConnectionRequests: ConnectionEntity[];
+
+  @OneToMany(() => CommentEntity, (comment) => comment.user)
+  comments: CommentEntity[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
