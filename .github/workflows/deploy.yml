@@ -32,7 +32,7 @@ jobs:
 
           if [ ! -d "peyvand-backend-nestjs/.git" ]; then
             echo "⚠️ Repository not found, cloning again..."
-            GIT_SSH_COMMAND="ssh -i ~/.ssh/snapshare_rsa -o StrictHostKeyChecking=no" git clone git@github.com:alireza10up/peyvand-backend-nestjs.git peyvand-backend-nestjs
+            GIT_SSH_COMMAND="ssh -i ~/.ssh/peyvand_rsa -o StrictHostKeyChecking=no" git clone git@github.com:alireza10up/peyvand-backend-nestjs.git peyvand-backend-nestjs
           fi
 
           cd peyvand-backend-nestjs
@@ -41,7 +41,7 @@ jobs:
           ls -la
           
           git reset --hard
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/snapshare_rsa -o StrictHostKeyChecking=no" git pull origin develop
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/peyvand_rsa -o StrictHostKeyChecking=no" git pull origin develop
           npm install --legacy-peer-deps
 
           # Create .env file from GitHub Secrets
