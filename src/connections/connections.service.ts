@@ -124,9 +124,7 @@ export class ConnectionsService {
             ], // Load default relations if none specified for general use
     });
     if (!connection) {
-      throw new NotFoundException(
-        `ارتباط با شناسه ${connectionId} یافت نشد.`,
-      );
+      throw new NotFoundException(`ارتباط با شناسه ${connectionId} یافت نشد.`);
     }
     return connection;
   }
@@ -170,7 +168,9 @@ export class ConnectionsService {
           (existingConnection.receiverId === requesterId &&
             existingConnection.status === ConnectionStatus.BLOCKED) // They blocked you (assuming BLOCKED is mutual or initiated by one party)
         ) {
-          throw new ConflictException('به دلیل مسدود بودن، امکان ارسال درخواست وجود ندارد.');
+          throw new ConflictException(
+            'به دلیل مسدود بودن، امکان ارسال درخواست وجود ندارد.',
+          );
         }
       }
       // If REJECTED, allow sending a new request by creating a new one or updating the existing one.
@@ -233,9 +233,7 @@ export class ConnectionsService {
     const connection = await this.findConnectionByIdOrFail(requestId);
 
     if (connection.receiverId !== currentUserId) {
-      throw new ForbiddenException(
-        'شما مجاز به پذیرش این درخواست نیستید.',
-      );
+      throw new ForbiddenException('شما مجاز به پذیرش این درخواست نیستید.');
     }
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException(
@@ -255,9 +253,7 @@ export class ConnectionsService {
     const connection = await this.findConnectionByIdOrFail(requestId);
 
     if (connection.receiverId !== currentUserId) {
-      throw new ForbiddenException(
-        'شما مجاز به رد این درخواست نیستید.',
-      );
+      throw new ForbiddenException('شما مجاز به رد این درخواست نیستید.');
     }
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException(
@@ -277,9 +273,7 @@ export class ConnectionsService {
     const connection = await this.findConnectionByIdOrFail(requestId);
 
     if (connection.requesterId !== currentUserId) {
-      throw new ForbiddenException(
-        'شما مجاز به لغو این درخواست نیستید.',
-      );
+      throw new ForbiddenException('شما مجاز به لغو این درخواست نیستید.');
     }
     if (connection.status !== ConnectionStatus.PENDING) {
       throw new ConflictException('فقط درخواست‌های در انتظار قابل لغو هستند.');

@@ -23,7 +23,7 @@ export class ConnectionParticipantGuard implements CanActivate {
     }
     const connectionId = parseInt(connectionIdString, 10);
     if (isNaN(connectionId)) {
-      throw new ForbiddenException('Invalid Connection ID.');
+      throw new ForbiddenException('شناسه ارتباط نامعتبر است.');
     }
 
     try {
@@ -36,15 +36,13 @@ export class ConnectionParticipantGuard implements CanActivate {
         connection.requesterId !== currentUserId &&
         connection.receiverId !== currentUserId
       ) {
-        throw new ForbiddenException(
-          'You are not a participant in this connection.',
-        );
+        throw new ForbiddenException('شما مشارکت‌کننده در این ارتباط نیستید.');
       }
 
       // For removing a connection, it should typically be in 'ACCEPTED' state
       if (connection.status !== ConnectionStatus.ACCEPTED) {
         throw new ForbiddenException(
-          'Only accepted connections can be removed by participants.',
+          'فقط ارتباط‌های پذیرفته شده می‌توانند توسط مشارکت‌کنندگان حذف شوند.',
         );
       }
 
@@ -60,7 +58,7 @@ export class ConnectionParticipantGuard implements CanActivate {
       }
 
       throw new InternalServerErrorException(
-        'Error validating connection participant.',
+        'خطا در اعتبارسنجی مشارکت‌کننده ارتباط.',
       );
     }
   }

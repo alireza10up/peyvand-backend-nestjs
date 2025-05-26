@@ -23,7 +23,7 @@ export class ConnectionRequesterGuard implements CanActivate {
     }
     const requestId = parseInt(requestIdString, 10);
     if (isNaN(requestId)) {
-      throw new ForbiddenException('Invalid Request ID.');
+      throw new ForbiddenException('شناسه درخواست نامعتبر است.');
     }
 
     try {
@@ -33,14 +33,12 @@ export class ConnectionRequesterGuard implements CanActivate {
       );
 
       if (connection.requesterId !== currentUserId) {
-        throw new ForbiddenException(
-          'You are not authorized to perform this action.',
-        );
+        throw new ForbiddenException('شما مجاز به انجام این عملیات نیستید.');
       }
 
       if (connection.status !== ConnectionStatus.PENDING) {
         throw new ForbiddenException(
-          'Only pending requests can be modified by the requester.',
+          'فقط درخواست‌های در انتظار می‌توانند توسط درخواست‌دهنده اصلاح شوند.',
         );
       }
 
@@ -56,7 +54,7 @@ export class ConnectionRequesterGuard implements CanActivate {
       }
 
       throw new InternalServerErrorException(
-        'Error validating connection requester.',
+        'خطا در اعتبارسنجی فرستنده درخواست ارتباط.',
       );
     }
   }

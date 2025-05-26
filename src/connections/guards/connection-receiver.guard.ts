@@ -19,7 +19,9 @@ export class ConnectionReceiverGuard implements CanActivate {
     const requestIdString = request.params.requestId;
 
     if (!currentUserId || !requestIdString) {
-      throw new ForbiddenException('شما دریافت‌کننده این درخواست ارتباط نیستید.');
+      throw new ForbiddenException(
+        'شما دریافت‌کننده این درخواست ارتباط نیستید.',
+      );
     }
 
     const requestId = parseInt(requestIdString, 10);
@@ -35,9 +37,7 @@ export class ConnectionReceiverGuard implements CanActivate {
       );
 
       if (connection.receiverId !== currentUserId) {
-        throw new ForbiddenException(
-          'شما مجاز به انجام این عملیات نیستید.',
-        );
+        throw new ForbiddenException('شما مجاز به انجام این عملیات نیستید.');
       }
 
       if (connection.status !== ConnectionStatus.PENDING) {

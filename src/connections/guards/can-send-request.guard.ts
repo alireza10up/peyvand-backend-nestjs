@@ -11,7 +11,6 @@ import { ConnectionsService } from '../connections.service';
 import { CreateConnectionRequestDto } from '../dto/create-connection-request.dto';
 import { ConnectionStatus } from '../enums/connection-status.enum';
 import { UsersService } from '../../users/users.service';
-import { RequestWithUser } from '../../common/interfaces/request-with-user.interface'; // To check if receiver exists
 
 @Injectable()
 export class CanSendRequestGuard implements CanActivate {
@@ -27,12 +26,12 @@ export class CanSendRequestGuard implements CanActivate {
     const receiverId = body.receiverId;
 
     if (!currentUserId || !receiverId) {
-      throw new ForbiddenException('User or Receiver ID not provided.');
+      throw new ForbiddenException('شناسه کاربر یا گیرنده ارائه نشده است.');
     }
 
     if (currentUserId === receiverId) {
       throw new ForbiddenException(
-        'You cannot send a connection request to yourself.',
+        'شما نمی‌توانید به خودتان درخواست ارتباط ارسال کنید.',
       );
     }
 
@@ -50,20 +49,20 @@ export class CanSendRequestGuard implements CanActivate {
       if (existingConnection) {
         if (existingConnection.status === ConnectionStatus.PENDING) {
           throw new ConflictException(
-            'A pending request already exists with this user.',
+            'یک درخواست در انتظار برای این کاربر قبلاً وجود دارد.',
           );
         }
 
         if (existingConnection.status === ConnectionStatus.ACCEPTED) {
           throw new ConflictException(
-            'You are already connected with this user.',
+            'شما در حال حاضر با این کاربر در ارتباط هستید.',
           );
         }
 
         if (existingConnection.status === ConnectionStatus.BLOCKED) {
           // More detailed block checking might be needed here based on who initiated the block
           throw new ConflictException(
-            'Unable to send request due to a block involving this user.',
+            'به دلیل وجود بلاک بین شما و این کاربر، امکان ارسال درخواست وجود ندارد.',
           );
         }
         // If REJECTED, the service's sendRequest method will handle updating it.
@@ -75,7 +74,7 @@ export class CanSendRequestGuard implements CanActivate {
           const status: string = existingConnection.status;
 
           throw new ConflictException(
-            `An existing connection in status '${status}' prevents a new request.`,
+            `یک ارتباط موجود با وضعیت '${status}' مانع از ایجاد درخواست جدید می‌شود.`,
           );
         }
       }
@@ -92,7 +91,7 @@ export class CanSendRequestGuard implements CanActivate {
 
       // Log other errors or rethrow a generic one
       throw new InternalServerErrorException(
-        'Error validating ability to send connection request.',
+        'خطا در اعتبارسنجی توانایی ارسال درخواست ارتباط.',
       );
     }
   }

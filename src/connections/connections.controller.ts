@@ -38,11 +38,13 @@ export class ConnectionsController {
     @Body() createConnectionDto: CreateConnectionRequestDto,
   ): Promise<ConnectionDto> {
     const currentUserId = req.user.id;
+
     if (currentUserId === createConnectionDto.receiverId) {
       throw new ForbiddenException(
         'شما نمی‌توانید به خودتان درخواست ارتباط ارسال کنید.',
       );
     }
+
     return this.connectionsService.sendRequest(
       currentUserId,
       createConnectionDto,
