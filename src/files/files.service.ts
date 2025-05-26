@@ -64,7 +64,7 @@ export class FilesService {
       await fs.unlink(filePath);
     } catch (error) {
       console.error(error);
-      console.warn(`File not found or can't be deleted: ${filePath}`);
+      console.warn(`فایل پیدا نشد یا قابل حذف نیست: ${filePath}`);
     }
   }
 

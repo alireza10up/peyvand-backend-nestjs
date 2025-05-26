@@ -1,3 +1,15 @@
+# [0.5.0]
+
+## Feature
+
+- connection: Implemented a new module for managing user connections (friendship system).
+- users: new dto for better transfer data between modules(connections and users).
+
+## Improvement
+
+- Discussed and applied naming conventions (camelCase in TypeScript, snake_case for database columns where
+  applicable).
+
 # [0.4.0]
 
 ## feature

@@ -7,6 +7,7 @@ import { CommonModule } from './common/common.module';
 import { PostsModule } from './posts/posts.module';
 import { FilesModule } from './files/files.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ConnectionsModule } from './connections/connections.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CommonModule,
     PostsModule,
     FilesModule,
+    ConnectionsModule,
   ],
   providers: [],
 })

@@ -43,9 +43,9 @@ export class UsersService {
     }
 
     // Check Field student_code Uniques
-    if (updateData.student_code != undefined) {
+    if (updateData.studentCode != undefined) {
       const existingUser = await this.usersRepository.findOne({
-        where: { student_code: updateData.student_code },
+        where: { studentCode: updateData.studentCode },
       });
 
       if (existingUser && existingUser.id !== id) {
@@ -54,9 +54,9 @@ export class UsersService {
     }
 
     // Check Field File Exist and Public
-    if (updateData.profile_file != undefined) {
+    if (updateData.profileFile != undefined) {
       const isFilePublic: boolean = await this.filesService.isPublic(
-        updateData.profile_file,
+        updateData.profileFile,
       );
 
       if (!isFilePublic) {
@@ -64,7 +64,7 @@ export class UsersService {
       }
 
       // Mark File To Used
-      await this.filesService.markFileAsUsed(updateData.profile_file);
+      await this.filesService.markFileAsUsed(updateData.profileFile);
     }
 
     const cleanUpdateData: Record<string, any> = {};
@@ -81,8 +81,8 @@ export class UsersService {
 
     await this.usersRepository.update(id, {
       ...cleanUpdateData,
-      profile_file: cleanUpdateData.profile_file
-        ? { id: updateData.profile_file }
+      profileFile: cleanUpdateData.profileFile
+        ? { id: updateData.profileFile }
         : null,
     });
 

@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { PostEntity } from '../../posts/entities/post.entity';
 import { FileEntity } from '../../files/entities/file.entity';
+import { ConnectionEntity } from 'src/connections/entities/connection.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -18,16 +19,16 @@ export class UserEntity {
   email: string;
 
   @Column({ length: 128, nullable: true })
-  first_name: string;
+  firstName: string;
 
   @Column({ length: 128, nullable: true })
-  last_name: string;
+  lastName: string;
 
   @Column({ type: 'date', nullable: true })
-  birth_date: Date;
+  birthDate: Date;
 
   @Column({ length: 128, nullable: true, unique: true })
-  student_code: string;
+  studentCode: string;
 
   @Column({ select: false, nullable: false })
   password: string;
@@ -40,5 +41,11 @@ export class UserEntity {
 
   @OneToOne(() => FileEntity, { nullable: true, eager: true })
   @JoinColumn()
-  profile_file: FileEntity | null;
+  profileFile: FileEntity | null;
+
+  @OneToMany(() => ConnectionEntity, (connection) => connection.requester)
+  sentConnectionRequests: ConnectionEntity[];
+
+  @OneToMany(() => ConnectionEntity, (connection) => connection.receiver)
+  receivedConnectionRequests: ConnectionEntity[];
 }
