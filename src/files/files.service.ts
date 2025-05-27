@@ -116,4 +116,28 @@ export class FilesService {
 
     return files;
   }
+
+  async validatePrivateFilesOfUser(
+    fileIds: number[],
+    userId: number,
+  ): Promise<FileEntity[]> {
+    if (!fileIds || fileIds.length === 0) {
+      return [];
+    }
+
+    const files = await this.filesRepository.find({
+      where: {
+        id: In(fileIds),
+        visibility: FileVisibility.PRIVATE,
+        user: { id: userId },
+      },
+    });
+
+    if (files.length !== fileIds.length) {
+      throw new ConflictException(
+        'برخی فایل‌های خصوصی معتبر نیستند یا به شما تعلق ندارند.',
+      );
+    }
+    return files;
+  }
 }
