@@ -8,4 +8,5 @@ export class CommentDto {
   user: UserSummaryDto | null;
   parentId?: number | null;
   replyCount?: number;
+  replies?: CommentDto[];
 }
