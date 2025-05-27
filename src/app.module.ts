@@ -9,6 +9,7 @@ import { FilesModule } from './files/files.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConnectionsModule } from './connections/connections.module';
 import { CommentsModule } from './comments/comments.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CommentsModule } from './comments/comments.module';
     FilesModule,
     ConnectionsModule,
     CommentsModule,
+    ChatModule,
   ],
   providers: [],
 })
