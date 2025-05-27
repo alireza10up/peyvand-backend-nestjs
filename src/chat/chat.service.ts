@@ -49,28 +49,42 @@ export class ChatService {
 
     let conversation = await this.conversationRepository
       .createQueryBuilder('conversation')
-      .innerJoin('conversation.participants', 'participant1')
-      .innerJoin('conversation.participants', 'participant2')
-      .where('participant1.id = :userId1 AND participant2.id = :userId2', {
-        userId1: currentUser.id,
-        userId2: participantId,
-      })
+      .innerJoin('conversation.participants', 'participant1_alias')
+      .innerJoin('conversation.participants', 'participant2_alias')
+      .where(
+        'participant1_alias.id = :currentUserId AND participant2_alias.id = :otherParticipantId',
+        {
+          currentUserId: currentUser.id,
+          otherParticipantId: participantId,
+        },
+      )
       .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
-          .select('COUNT(p.id)')
-          .from('conversation_participants', 'p')
-          .where('p.conversation_id = conversation.id')
+          .select('COUNT(cp.user_id)')
+          .from('conversation_participants', 'cp')
+          .where('cp.conversation_id = conversation.id')
           .getQuery();
         return `(${subQuery}) = 2`;
       })
+      .leftJoinAndSelect('conversation.participants', 'loaded_participants')
       .getOne();
 
     if (!conversation) {
       const newConversation = this.conversationRepository.create({
         participants: [currentUser, otherParticipant],
       });
-      conversation = await this.conversationRepository.save(newConversation);
+      //  باید participants رو هم همراهش برگردونیم برای mapConversationToDto
+      const savedConv = await this.conversationRepository.save(newConversation);
+      //  بعد از save، participants لود نمیشن مگر اینکه دوباره find کنیم یا eager باشه (که هست)
+      conversation = await this.conversationRepository.findOne({
+        where: { id: savedConv.id },
+        relations: ['participants'], //  اطمینان از لود شدن participants
+      });
+      if (!conversation) {
+        //  این نباید اتفاق بیوفته
+        throw new NotFoundException('خطا در ایجاد یا بازیابی گفتگو.');
+      }
     }
 
     return this.mapConversationToDto(conversation, currentUser.id);
@@ -211,7 +225,7 @@ export class ChatService {
     includeLastMessage: boolean = true,
   ): Promise<ConversationDto> {
     const participantsDto = conversation.participants.map((p) =>
-      plainToInstance(UserProfileDto, p, { excludeExtraneousValues: true }),
+      plainToInstance(UserProfileDto, p),
     );
 
     let lastMessageDto: MessageDto | undefined = undefined;

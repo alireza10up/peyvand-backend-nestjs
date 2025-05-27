@@ -17,14 +17,11 @@ export class ConversationParticipantGuard implements CanActivate {
     const user = request.user;
 
     const conversationIdParam = request.params.conversationId;
-    const conversationIdBody = request.body.conversationId;
 
     let conversationId: number;
 
     if (conversationIdParam) {
       conversationId = parseInt(conversationIdParam, 10);
-    } else if (conversationIdBody) {
-      conversationId = parseInt(conversationIdBody, 10);
     } else {
       return true;
     }
