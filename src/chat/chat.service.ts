@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -20,6 +22,7 @@ import { UserProfileDto } from '../users/dto/user-profile.dto';
 import { FileEntity } from '../files/entities/file.entity';
 import { MessageStatus } from './enums/message-status.enum';
 import { FileVisibility } from '../files/enums/file-visibility.enum';
+import { ChatGateway } from './gateways/chat.gateway';
 
 @Injectable()
 export class ChatService {
@@ -30,6 +33,8 @@ export class ChatService {
     private readonly messageRepository: Repository<MessageEntity>,
     private readonly usersService: UsersService,
     private readonly filesService: FilesService,
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   async createOrGetConversation(
@@ -74,19 +79,15 @@ export class ChatService {
       const newConversation = this.conversationRepository.create({
         participants: [currentUser, otherParticipant],
       });
-      //  باید participants رو هم همراهش برگردونیم برای mapConversationToDto
       const savedConv = await this.conversationRepository.save(newConversation);
-      //  بعد از save، participants لود نمیشن مگر اینکه دوباره find کنیم یا eager باشه (که هست)
       conversation = await this.conversationRepository.findOne({
         where: { id: savedConv.id },
-        relations: ['participants'], //  اطمینان از لود شدن participants
+        relations: ['participants'],
       });
       if (!conversation) {
-        //  این نباید اتفاق بیوفته
         throw new NotFoundException('خطا در ایجاد یا بازیابی گفتگو.');
       }
     }
-
     return this.mapConversationToDto(conversation, currentUser.id);
   }
 
@@ -138,8 +139,14 @@ export class ChatService {
     });
 
     const savedMessage = await this.messageRepository.save(newMessage);
+    const messageDto = await this.mapMessageToDto(savedMessage, sender.id);
 
-    return this.mapMessageToDto(savedMessage, sender.id);
+    this.chatGateway.sendNewMessageToConversation(conversation.id, messageDto);
+
+    conversation.updatedAt = new Date();
+    await this.conversationRepository.save(conversation);
+
+    return messageDto;
   }
 
   async getUserConversations(userId: number): Promise<ConversationDto[]> {
@@ -188,7 +195,18 @@ export class ChatService {
       order: { createdAt: 'ASC' },
     });
 
-    await this.markMessagesAsRead(conversationId, userId);
+    const unreadMessagesExist = messages.some(
+      (m) => m.senderId !== userId && m.status === MessageStatus.SENT,
+    );
+
+    if (unreadMessagesExist) {
+      await this.markMessagesAsRead(conversationId, userId);
+      this.chatGateway.emitMessageStatusUpdateToConversation(
+        conversationId,
+        userId,
+        MessageStatus.READ,
+      );
+    }
 
     return Promise.all(
       messages.map((msg) => this.mapMessageToDto(msg, userId)),
@@ -199,7 +217,7 @@ export class ChatService {
     conversationId: number,
     readerId: number,
   ): Promise<void> {
-    await this.messageRepository.update(
+    const updateResult = await this.messageRepository.update(
       {
         conversation: { id: conversationId },
         sender: { id: Not(readerId) },
@@ -207,6 +225,14 @@ export class ChatService {
       },
       { status: MessageStatus.READ },
     );
+
+    if (updateResult.affected && updateResult.affected > 0) {
+      this.chatGateway.emitMessageStatusUpdateToConversation(
+        conversationId,
+        readerId,
+        MessageStatus.READ,
+      );
+    }
   }
 
   async getConversionById(
@@ -218,7 +244,6 @@ export class ChatService {
     });
   }
 
-  // --- Helper Mappers ---
   private async mapConversationToDto(
     conversation: ConversationEntity,
     currentUserId: number,
@@ -262,20 +287,18 @@ export class ChatService {
     message: MessageEntity,
     currentUserId: number,
   ): Promise<MessageDto> {
-    let attachmentsDto: Partial<FileEntity>[] | undefined = undefined;
+    console.log(currentUserId);
 
-    console.info(currentUserId);
+    let attachmentsDto: Partial<FileEntity>[] | undefined = undefined;
 
     if (message.attachment_file_ids && message.attachment_file_ids.length > 0) {
       const files: FileEntity[] = [];
-
       for (const fileId of message.attachment_file_ids) {
         try {
           const file = await this.filesService.findOrFailed(
             fileId,
             FileVisibility.PRIVATE,
           );
-
           if (file) {
             files.push(file);
           }
@@ -297,9 +320,7 @@ export class ChatService {
     return {
       id: message.id,
       content: message.content,
-      sender: plainToInstance(UserProfileDto, message.sender, {
-        excludeExtraneousValues: true,
-      }),
+      sender: plainToInstance(UserProfileDto, message.sender),
       conversationId: message.conversationId,
       attachments: attachmentsDto,
       status: message.status,

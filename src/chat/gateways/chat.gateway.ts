@@ -8,7 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { forwardRef, Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
@@ -18,10 +18,8 @@ import { UsersService } from '../../users/users.service';
 import { AuthenticatedSocket } from '../intefaces/authenticated-socket.interface';
 import { MessageStatus } from '../enums/message-status.enum';
 
-// import { WsJwtAuthGuard } from '../../auth/guards/ws-jwt-auth.guard'; //  TODO
-
 @WebSocketGateway({
-  cors: { origin: '*' }, // TODO: Restrict in production
+  cors: { origin: '*' },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -30,6 +28,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private logger: Logger = new Logger('ChatGateway');
 
   constructor(
+    @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -118,16 +117,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         conversationId,
         userId,
         MessageStatus.READ,
-        client,
       );
 
       return { status: 'ok', message: `Joined conversation ${conversationId}` };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(
         `Error joining conversation ${conversationId} for user ${userId}: ${errorMessage}`,
       );
-
       return { status: 'error', message: 'خطا در پیوستن به گفتگو.' };
     }
   }
@@ -145,7 +143,39 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  //  این متد توسط ChatService صدا زده می‌شه
+  @SubscribeMessage('startTyping')
+  handleStartTyping(
+    @MessageBody() data: { conversationId: number },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ): void {
+    if (!client.user) return;
+    const { conversationId } = data;
+    client.to(conversationId.toString()).emit('userTyping', {
+      conversationId,
+      userId: client.user.id,
+      userName: client.user.firstName || client.user.email,
+    });
+    this.logger.log(
+      `User ${client.user.email} started typing in conversation: ${conversationId}`,
+    );
+  }
+
+  @SubscribeMessage('stopTyping')
+  handleStopTyping(
+    @MessageBody() data: { conversationId: number },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ): void {
+    if (!client.user) return;
+    const { conversationId } = data;
+    client.to(conversationId.toString()).emit('userStoppedTyping', {
+      conversationId,
+      userId: client.user.id,
+    });
+    this.logger.log(
+      `User ${client.user.email} stopped typing in conversation: ${conversationId}`,
+    );
+  }
+
   public sendNewMessageToConversation(
     conversationId: number,
     message: MessageDto,
@@ -158,7 +188,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     conversationId: number,
     readerId: number,
     status: MessageStatus,
-    initiatorClient?: AuthenticatedSocket,
   ) {
     const payload = { conversationId, readerId, status };
     this.server
