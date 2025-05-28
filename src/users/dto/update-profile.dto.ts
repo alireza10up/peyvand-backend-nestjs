@@ -53,5 +53,5 @@ export class UpdateProfileDto {
   skills?: string[];
 
   @IsOptional()
-  univer
+  university?: string;
 }
