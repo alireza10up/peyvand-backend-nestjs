@@ -45,4 +45,13 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsNumber()
   profileFile?: number;
+
+  @IsOptional()
+  bio?: string;
+
+  @IsOptional()
+  skills?: string[];
+
+  @IsOptional()
+  univer
 }
