@@ -19,6 +19,7 @@ import { PostVisibilityGuard } from './guards/post-visibility.guard';
 import { PostOwnerGuard } from './guards/post-owner.guard';
 import { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 import { LikesService } from '../likes/likes.service';
+import { PostStatus } from './enums/post-status.enum';
 
 @Controller('posts')
 export class PostsController {
@@ -118,5 +119,20 @@ export class PostsController {
 
       return { message: 'لایک شد' };
     }
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getMyPosts(@Request() req: RequestWithUser) {
+    const userId = req.user.id;
+    return this.postsService.findAllByUser(userId);
+  }
+
+  @Get('user/:userId')
+  @UseGuards(JwtAuthGuard)
+  async getPublishedPostsByUser(
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.postsService.findAllByUser(userId, PostStatus.PUBLISHED);
   }
 }
