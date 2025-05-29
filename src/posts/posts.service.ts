@@ -106,12 +106,12 @@ export class PostsService {
     userId: number,
     status?: PostStatus,
   ): Promise<PostEntity[]> {
-    const where: any = { user: { id: userId } };
+    const where: Record<string, any> = { user: { id: userId } };
 
     if (status) {
       where.status = status;
     }
-    
+
     return this.postsRepository.find({
       where,
       relations: ['user', 'files'],

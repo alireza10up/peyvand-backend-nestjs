@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Request,
@@ -20,6 +19,7 @@ import { PostOwnerGuard } from './guards/post-owner.guard';
 import { RequestWithUser } from 'src/common/interfaces/request-with-user.interface';
 import { LikesService } from '../likes/likes.service';
 import { PostStatus } from './enums/post-status.enum';
+import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 
 @Controller('posts')
 export class PostsController {
@@ -45,19 +45,22 @@ export class PostsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, PostVisibilityGuard)
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIdPipe) id: string) {
     return this.postsService.findOne(+id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PostOwnerGuard)
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
+  update(
+    @Param('id', ParseIdPipe) id: string,
+    @Body() updatePostDto: UpdatePostDto,
+  ) {
     return this.postsService.update(+id, updatePostDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PostOwnerGuard)
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', ParseIdPipe) id: string) {
     const resultDelete = await this.postsService.remove(+id);
 
     if (!resultDelete) {
@@ -71,7 +74,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   async likePost(
     @Request() req: RequestWithUser,
-    @Param('id', ParseIntPipe) postId: number,
+    @Param('id', ParseIdPipe) postId: number,
   ) {
     const userId = req.user.id;
 
@@ -84,7 +87,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   async unlikePost(
     @Request() req: RequestWithUser,
-    @Param('id', ParseIntPipe) postId: number,
+    @Param('id', ParseIdPipe) postId: number,
   ) {
     const userId = req.user.id;
 
@@ -94,7 +97,7 @@ export class PostsController {
   }
 
   @Get(':id/likes/count')
-  async countLikes(@Param('id', ParseIntPipe) postId: number) {
+  async countLikes(@Param('id', ParseIdPipe) postId: number) {
     const count = await this.likesService.countLikes(postId);
 
     return { postId, count };
@@ -104,7 +107,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   async toggleLike(
     @Request() req: RequestWithUser,
-    @Param('id', ParseIntPipe) postId: number,
+    @Param('id', ParseIdPipe) postId: number,
   ) {
     const userId = req.user.id;
 
@@ -121,18 +124,18 @@ export class PostsController {
     }
   }
 
-  @Get('me')
-  @UseGuards(JwtAuthGuard)
-  async getMyPosts(@Request() req: RequestWithUser) {
-    const userId = req.user.id;
-    return this.postsService.findAllByUser(userId);
-  }
-
   @Get('user/:userId')
   @UseGuards(JwtAuthGuard)
-  async getPublishedPostsByUser(
-    @Param('userId', ParseIntPipe) userId: number,
+  getPublishedPostsByUser(
+    @Param('userId', ParseIdPipe) userId: number,
+    @Request() req: RequestWithUser,
   ) {
+    const currentUserId = req.user.id;
+
+    if (currentUserId === userId) {
+      return this.postsService.findAllByUser(userId);
+    }
+
     return this.postsService.findAllByUser(userId, PostStatus.PUBLISHED);
   }
 }
