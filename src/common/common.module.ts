@@ -13,6 +13,6 @@ import { ParseIdPipe } from './pipes/parse-id.pipe';
     FilesCleanupService,
     ParseIdPipe,
   ],
-  exports: [LogFormatService],
+  exports: [LogFormatService, ParseIdPipe],
 })
 export class CommonModule {}
