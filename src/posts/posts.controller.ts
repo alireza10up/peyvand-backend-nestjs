@@ -80,7 +80,14 @@ export class PostsController {
 
     await this.likesService.likePost(userId, postId);
 
-    return { message: 'پست لایک شد' };
+    const count = await this.likesService.countLikes(postId);
+
+    const isLikedByCurrentUser = await this.likesService.hasUserLiked(
+      userId,
+      postId,
+    );
+
+    return { message: 'پست لایک شد', count, isLikedByCurrentUser };
   }
 
   @Delete(':id/like')
@@ -93,14 +100,32 @@ export class PostsController {
 
     await this.likesService.unlikePost(userId, postId);
 
-    return { message: 'لایک حذف شد' };
+    const count = await this.likesService.countLikes(postId);
+
+    const isLikedByCurrentUser = await this.likesService.hasUserLiked(
+      userId,
+      postId,
+    );
+
+    return { message: 'لایک حذف شد', count, isLikedByCurrentUser };
   }
 
   @Get(':id/likes/count')
-  async countLikes(@Param('id', ParseIdPipe) postId: number) {
+  async countLikes(
+    @Param('id', ParseIdPipe) postId: number,
+    @Request() req?: RequestWithUser,
+  ) {
     const count = await this.likesService.countLikes(postId);
+    let isLikedByCurrentUser = false;
 
-    return { postId, count };
+    if (req && req.user) {
+      isLikedByCurrentUser = await this.likesService.hasUserLiked(
+        req.user.id,
+        postId,
+      );
+    }
+
+    return { postId, count, isLikedByCurrentUser };
   }
 
   @Post(':id/like-toggle')
@@ -111,17 +136,22 @@ export class PostsController {
   ) {
     const userId = req.user.id;
 
-    const hasLiked = await this.likesService.hasUserLiked(userId, postId);
+    let message: string;
+    let isLikedByCurrentUser: boolean;
 
-    if (hasLiked) {
+    if (await this.likesService.hasUserLiked(userId, postId)) {
       await this.likesService.unlikePost(userId, postId);
-
-      return { message: 'لایک حذف شد' };
+      message = 'لایک حذف شد';
+      isLikedByCurrentUser = false;
     } else {
       await this.likesService.likePost(userId, postId);
-
-      return { message: 'لایک شد' };
+      message = 'لایک شد';
+      isLikedByCurrentUser = true;
     }
+
+    const count = await this.likesService.countLikes(postId);
+
+    return { message, count, isLikedByCurrentUser };
   }
 
   @Get('user/:userId')

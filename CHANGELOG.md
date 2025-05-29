@@ -1,3 +1,13 @@
+# [0.8.0]
+
+## Feature
+
+- posts: Added isLikedByCurrentUser and count to all like-related routes (like, unlike, countLikes, like-toggle)
+
+## Improvement
+
+- posts: Improved response structure and unified like endpoints for a better user experience
+
 # [0.7.0]
 
 - posts: new endpoint for get posts by user
