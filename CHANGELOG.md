@@ -10,9 +10,13 @@
 
 # [0.7.0]
 
+## Feature
+
 - posts: new endpoint for get posts by user
 
 # [0.6.0]
+
+## Feature
 
 - users: Added new field ( bio , skills , university )
 

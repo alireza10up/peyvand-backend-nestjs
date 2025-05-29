@@ -111,6 +111,7 @@ export class PostsController {
   }
 
   @Get(':id/likes/count')
+  @UseGuards(JwtAuthGuard)
   async countLikes(
     @Param('id', ParseIdPipe) postId: number,
     @Request() req?: RequestWithUser,
