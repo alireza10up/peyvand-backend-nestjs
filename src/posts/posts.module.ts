@@ -8,9 +8,15 @@ import { PostOwnerGuard } from './guards/post-owner.guard';
 import { FilesModule } from '../files/files.module';
 import { LikesModule } from '../likes/likes.module';
 import { PostExistsAndCommentableGuard } from './guards/post-exists-and-commentable.guard';
+import { CommonModule } from '../common/common.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PostEntity]), FilesModule, LikesModule],
+  imports: [
+    TypeOrmModule.forFeature([PostEntity]),
+    FilesModule,
+    LikesModule,
+    CommonModule,
+  ],
   controllers: [PostsController],
   providers: [
     PostsService,
