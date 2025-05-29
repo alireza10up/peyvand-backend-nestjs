@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
@@ -17,6 +18,11 @@ export class PostOwnerGuard implements CanActivate {
 
     if (!postId) {
       return false;
+    }
+
+    const id = Number(postId);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new BadRequestException('شناسه نا معتبر است');
     }
 
     const post = await this.postsService.findOne(+postId);

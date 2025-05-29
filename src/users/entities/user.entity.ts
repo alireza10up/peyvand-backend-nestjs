@@ -60,4 +60,13 @@ export class UserEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({ type: 'text', nullable: true })
+  bio?: string;
+
+  @Column({ type: 'varchar', length: 128, nullable: true })
+  university?: string;
+
+  @Column('text', { array: true, nullable: true })
+  skills?: string[];
 }
