@@ -6,4 +6,7 @@ export class UserProfileDto {
   birthDate?: Date;
   studentCode?: string;
   profileFile?: number;
+  bio?: string;
+  university?: string;
+  skills?: string[];
 }
