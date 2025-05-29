@@ -3,7 +3,7 @@ import {
   IsString,
   MaxLength,
   MinLength,
-  IsNotEmpty,
+  IsNotEmpty
 } from 'class-validator';
 
 export class CreateUserDto {
