@@ -5,6 +5,10 @@
 - users: Implement and add endpoint get profile by userid
 - connections: Add get accepted connection by user
 
+## Fix
+
+- users: Added email field in summary user dto
+
 # [0.8.0]
 
 ## Feature

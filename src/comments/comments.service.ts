@@ -85,6 +85,7 @@ export class CommentsService {
     summary.id = user.id;
     summary.firstName = user.firstName;
     summary.lastName = user.lastName;
+    summary.email = user.email;
 
     if (user.profileFile) {
       summary.profileFile = {
@@ -110,7 +111,7 @@ export class CommentsService {
     dto.updatedAt = comment.updatedAt;
 
     if (!comment.user) {
-      throw new InternalServerErrorException('کاربر کامنت میش شده.');
+      throw new InternalServerErrorException('کاربر کامنت میس شده.');
     }
 
     dto.user = this.mapUserToSummaryDto(comment.user);
