@@ -142,36 +142,43 @@ export class AdminController {
     const userIds = new Set();
 
     // Add nodes and edges for connections
-    connections.forEach((connection) => {
+    for (const connection of connections) {
+      // Load the full connection with relations
+      const fullConnection = await this.connectionService.findConnectionByIdOrFail(connection.id);
+      
+      if (!fullConnection.requester || !fullConnection.receiver) {
+        continue; // Skip invalid connections
+      }
+
       // Add requester node if not exists
-      if (!userIds.has(connection.requester.id)) {
+      if (!userIds.has(fullConnection.requester.id)) {
         nodes.push({
-          id: `user_${connection.requester.id}`,
-          label: connection.requester.email,
+          id: `user_${fullConnection.requester.id}`,
+          label: fullConnection.requester.email,
           group: 'users',
         });
-        userIds.add(connection.requester.id);
+        userIds.add(fullConnection.requester.id);
       }
 
       // Add receiver node if not exists
-      if (!userIds.has(connection.receiver.id)) {
+      if (!userIds.has(fullConnection.receiver.id)) {
         nodes.push({
-          id: `user_${connection.receiver.id}`,
-          label: connection.receiver.email,
+          id: `user_${fullConnection.receiver.id}`,
+          label: fullConnection.receiver.email,
           group: 'users',
         });
-        userIds.add(connection.receiver.id);
+        userIds.add(fullConnection.receiver.id);
       }
 
       // Add edge
       edges.push({
-        from: `user_${connection.requester.id}`,
-        to: `user_${connection.receiver.id}`,
-        label: connection.status,
+        from: `user_${fullConnection.requester.id}`,
+        to: `user_${fullConnection.receiver.id}`,
+        label: fullConnection.status,
         arrows: 'to',
-        color: connection.status === ConnectionStatus.ACCEPTED ? '#16a34a' : '#ca8a04',
+        color: fullConnection.status === ConnectionStatus.ACCEPTED ? '#16a34a' : '#ca8a04',
       });
-    });
+    }
 
     return { nodes, edges };
   }
