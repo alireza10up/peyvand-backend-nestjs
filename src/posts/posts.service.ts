@@ -48,9 +48,15 @@ export class PostsService {
     return this.postsRepository.save(post);
   }
 
-  findAll(): Promise<PostEntity[]> {
+  findAll(status?: PostStatus): Promise<PostEntity[]> {
+    const where: Record<string, any> = {};
+
+    if (status) {
+      where.status = status;
+    }
+
     return this.postsRepository.find({
-      where: { status: PostStatus.PUBLISHED },
+      where,
       relations: ['user', 'files'],
       order: { createdAt: 'DESC' },
     });

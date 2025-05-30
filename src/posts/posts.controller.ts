@@ -40,7 +40,7 @@ export class PostsController {
   @Get()
   @UseGuards(JwtAuthGuard)
   findAll() {
-    return this.postsService.findAll();
+    return this.postsService.findAll(PostStatus.PUBLISHED);
   }
 
   @Get(':id')

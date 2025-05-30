@@ -457,4 +457,8 @@ export class ConnectionsService {
     // This implies that blocking also overwrites any previous connection status.
     await this.connectionRepository.delete(connection.id);
   }
+
+  async findAll() {
+    return this.connectionRepository.find();
+  }
 }
