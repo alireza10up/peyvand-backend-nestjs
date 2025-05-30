@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { PostsService } from '../posts/posts.service';
 import { CommentsService } from '../comments/comments.service';
+import { ConfigService } from '@nestjs/config';
+import * as os from 'os';
+import { exec } from 'child_process';
 
 @Injectable()
 export class AdminService {
@@ -9,7 +12,24 @@ export class AdminService {
     private readonly usersService: UsersService,
     private readonly postsService: PostsService,
     private readonly commentsService: CommentsService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private logs: any[] = [];
+
+  addLog(level: 'info' | 'warn' | 'error', message: string, meta?: any) {
+    this.logs.unshift({
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      meta,
+    });
+    if (this.logs.length > 100) this.logs.length = 100;
+  }
+
+  async getLogs(limit = 50) {
+    return this.logs.slice(0, limit);
+  }
 
   async getOverview() {
     return {
@@ -47,12 +67,60 @@ export class AdminService {
     return this.commentsService.delete(commentId);
   }
 
+  async getSystemInfo() {
+    return {
+      platform: os.platform(),
+      arch: os.arch(),
+      cpus: os.cpus().length,
+      totalmem: os.totalmem(),
+      freemem: os.freemem(),
+      uptime: os.uptime(),
+      loadavg: os.loadavg(),
+      hostname: os.hostname(),
+      release: os.release(),
+      userInfo: os.userInfo(),
+    };
+  }
+
+  async getEnvVars() {
+    // Only expose safe envs
+    const keys = [
+      'ENV_MODE', 'PORT', 'DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_NAME',
+      'JWT_SECRET', 'JWT_EXPIRES_IN', 'UPLOAD_DESTINATION', 'UPLOAD_MAX_FILE_SIZE', 'UPLOAD_ALLOWED_MIME_TYPES'
+    ];
+    const envs = {};
+    for (const key of keys) {
+      envs[key] = this.configService.get(key);
+    }
+    return envs;
+  }
+
+  async restartSystem(): Promise<{ success: boolean; message: string }> {
+    // Only works if the process manager (like pm2) restarts the app on exit
+    try {
+      setTimeout(() => {
+        process.exit(0);
+      }, 1000);
+      return { success: true, message: 'در حال ریستارت سرور...' };
+    } catch (e) {
+      return { success: false, message: 'خطا در ریستارت: ' + e.message };
+    }
+  }
+
+  // Example advanced settings (should be persisted in DB, here just as a placeholder)
+  private settings = {
+    commentsEnabled: true,
+    registrationEnabled: true,
+    postCreationEnabled: true,
+  };
+
   async getSettings() {
-    return {};
+    return this.settings;
   }
 
   async updateSettings(body: any) {
-    return {};
+    this.settings = { ...this.settings, ...body };
+    return this.settings;
   }
 
   async changeUserPassword(userId: number, newPassword: string) {
