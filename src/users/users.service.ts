@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
@@ -33,6 +37,16 @@ export class UsersService {
 
   async findById(id: number) {
     return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async findOrFailById(userId: number): Promise<UserEntity> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException(`${userId}  یافت نشد کابر با شناسه `);
+    }
+
+    return user;
   }
 
   async updateUser(id: number, updateData: UpdateProfileDto) {

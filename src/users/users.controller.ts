@@ -5,6 +5,7 @@ import {
   Patch,
   Request,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { UsersService } from './users.service';
@@ -12,6 +13,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserProfileDto } from './dto/user-profile.dto';
 import { plainToInstance } from 'class-transformer';
 import { RequestWithUser } from '../common/interfaces/request-with-user.interface';
+import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 
 @Controller('users')
 export class UsersController {
@@ -24,6 +26,15 @@ export class UsersController {
 
     const user = await this.usersService.findById(userId);
 
+    return plainToInstance(UserProfileDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':userId/profile')
+  async getUserProfileById(
+    @Param('userId', ParseIdPipe) userId: string,
+  ): Promise<UserProfileDto> {
+    const user = await this.usersService.findOrFailById(Number(userId));
     return plainToInstance(UserProfileDto, user);
   }
 
