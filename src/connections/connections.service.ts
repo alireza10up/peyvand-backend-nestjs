@@ -333,7 +333,7 @@ export class ConnectionsService {
     return this.mapConnectionsToDtoArray(connections, userId);
   }
 
-  async getAcceptedConnections(userId: number): Promise<UserSummaryDto[]> {
+  async getAcceptedConnections(userId: number): Promise<ConnectionDto[]> {
     await this.findUserOrFail(userId);
     const connections = await this.connectionRepository.find({
       where: [
@@ -348,13 +348,7 @@ export class ConnectionsService {
       ],
     });
 
-    return connections
-      .map((conn) => {
-        const otherUser =
-          conn.requesterId === userId ? conn.receiver : conn.requester;
-        return this.mapUserToUserSummaryDto(otherUser);
-      })
-      .filter((user) => user !== null); // Filter out potential nulls if a user somehow gets deleted without cascade
+    return this.mapConnectionsToDtoArray(connections, userId);
   }
 
   async getConnectionStatusWithUser(
