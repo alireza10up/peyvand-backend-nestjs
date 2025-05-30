@@ -4,7 +4,6 @@ import { PostsService } from '../posts/posts.service';
 import { CommentsService } from '../comments/comments.service';
 import { ConfigService } from '@nestjs/config';
 import * as os from 'os';
-import { exec } from 'child_process';
 
 @Injectable()
 export class AdminService {
@@ -85,8 +84,17 @@ export class AdminService {
   async getEnvVars() {
     // Only expose safe envs
     const keys = [
-      'ENV_MODE', 'PORT', 'DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_NAME',
-      'JWT_SECRET', 'JWT_EXPIRES_IN', 'UPLOAD_DESTINATION', 'UPLOAD_MAX_FILE_SIZE', 'UPLOAD_ALLOWED_MIME_TYPES'
+      'ENV_MODE',
+      'PORT',
+      'DB_HOST',
+      'DB_PORT',
+      'DB_USERNAME',
+      'DB_NAME',
+      'JWT_SECRET',
+      'JWT_EXPIRES_IN',
+      'UPLOAD_DESTINATION',
+      'UPLOAD_MAX_FILE_SIZE',
+      'UPLOAD_ALLOWED_MIME_TYPES',
     ];
     const envs = {};
     for (const key of keys) {

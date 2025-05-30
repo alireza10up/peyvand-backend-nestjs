@@ -1,3 +1,7 @@
+# [0.10.0]
+
+- admin: implement panel admin
+
 # [0.9.0]
 
 ## Feature

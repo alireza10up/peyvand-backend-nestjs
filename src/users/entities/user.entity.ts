@@ -27,6 +27,12 @@ export class UserEntity {
   @Column({ length: 128, nullable: true })
   lastName: string;
 
+  @Column({ length: 30, nullable: true, unique: true })
+  username: string;
+
+  @Column({ length: 15, nullable: true })
+  phoneNumber: string;
+
   @Column({ type: 'date', nullable: true })
   birthDate: Date;
 
@@ -72,4 +78,10 @@ export class UserEntity {
 
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isVerified: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
 }
