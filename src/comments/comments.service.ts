@@ -277,4 +277,16 @@ export class CommentsService {
 
     return Promise.all(replies.map((reply) => this.mapCommentToDto(reply, 0)));
   }
+
+  async count() {
+    return this.commentRepository.count();
+  }
+
+  async delete(commentId: number) {
+    return this.commentRepository.delete(commentId);
+  }
+
+  async findAll(query?: any) {
+    return this.commentRepository.find(); // TODO: add query support
+  }
 }

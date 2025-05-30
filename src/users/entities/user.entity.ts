@@ -69,4 +69,7 @@ export class UserEntity {
 
   @Column('text', { array: true, nullable: true })
   skills?: string[];
+
+  @Column({ type: 'boolean', default: false })
+  isAdmin: boolean;
 }

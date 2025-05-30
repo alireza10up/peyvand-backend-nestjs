@@ -118,4 +118,12 @@ export class PostsService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async count() {
+    return this.postsRepository.count();
+  }
+
+  async delete(postId: number) {
+    return this.postsRepository.delete(postId);
+  }
 }

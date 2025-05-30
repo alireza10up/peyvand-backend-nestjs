@@ -9,6 +9,7 @@ import { UserEntity } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { FilesService } from '../files/files.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -101,5 +102,31 @@ export class UsersService {
     });
 
     return this.findById(id);
+  }
+
+  async setAdmin(userId: number, isAdmin: boolean) {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('کاربر یافت نشد');
+    user.isAdmin = isAdmin;
+    return this.usersRepository.save(user);
+  }
+
+  async delete(userId: number) {
+    return this.usersRepository.delete(userId);
+  }
+
+  async count() {
+    return this.usersRepository.count();
+  }
+
+  async findAll(query?: any) {
+    return this.usersRepository.find(); // TODO: add query support
+  }
+
+  async changePassword(userId: number, newPassword: string) {
+    const user = await this.findOrFailById(userId);
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    return this.usersRepository.save(user);
   }
 }

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="/public/admin-panel.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Panel</h1>
+    <nav>
+      <button onclick="showSection('overview')">Overview</button>
+      <button onclick="showSection('users')">Users</button>
+      <button onclick="showSection('posts')">Posts</button>
+      <button onclick="showSection('comments')">Comments</button>
+      <button onclick="showSection('settings')">Settings</button>
+    </nav>
+    <section id="overview" class="panel-section"></section>
+    <section id="users" class="panel-section" style="display:none"></section>
+    <section id="posts" class="panel-section" style="display:none"></section>
+    <section id="comments" class="panel-section" style="display:none"></section>
+    <section id="settings" class="panel-section" style="display:none"></section>
+  </div>
+  <script src="/public/admin-panel.js"></script>
+</body>
+</html>
