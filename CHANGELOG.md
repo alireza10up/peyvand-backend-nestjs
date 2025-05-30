@@ -1,3 +1,9 @@
+# [0.9.0]
+
+## Feature
+
+- users: Implement and add endpoint get profile by userid
+
 # [0.8.0]
 
 ## Feature
