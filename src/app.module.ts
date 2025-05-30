@@ -39,13 +39,23 @@ import { AdminModule } from './admin/admin.module';
           'UPLOAD_DESTINATION',
           'uploads',
         );
+        const adminPath = configService.get<string>(
+          'ADMIN_PANEL',
+          'admin',
+        );
 
-        const rootPathValue = join(process.cwd(), uploadPath);
+        const rootPathUpload = join(process.cwd(), uploadPath);
+        const rootPathAdmin = join(process.cwd(), 'public/admin');
 
         return [
           {
-            rootPath: rootPathValue,
+            rootPath: rootPathUpload,
             serveRoot: `/${uploadPath}`,
+            serveStaticOptions: {},
+          },
+          {
+            rootPath: rootPathAdmin,
+            serveRoot: `/${adminPath}`,
             serveStaticOptions: {},
           },
         ];
