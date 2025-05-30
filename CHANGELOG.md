@@ -3,6 +3,7 @@
 ## Feature
 
 - users: Implement and add endpoint get profile by userid
+- connections: Add get accepted connection by user
 
 # [0.8.0]
 

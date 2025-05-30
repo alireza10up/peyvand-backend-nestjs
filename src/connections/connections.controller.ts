@@ -2,12 +2,10 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Request,
@@ -25,6 +23,7 @@ import { CanSendRequestGuard } from './guards/can-send-request.guard';
 import { ConnectionReceiverGuard } from './guards/connection-receiver.guard';
 import { ConnectionRequesterGuard } from './guards/connection-requester.guard';
 import { ConnectionParticipantGuard } from './guards/connection-participant.guard';
+import { ParseIdPipe } from '../common/pipes/parse-id.pipe';
 
 @Controller('connections')
 @UseGuards(JwtAuthGuard)
@@ -50,7 +49,7 @@ export class ConnectionsController {
   @UseGuards(ConnectionRequesterGuard)
   async cancelSentRequest(
     @Request() req: RequestWithUser,
-    @Param('requestId', ParseIntPipe) requestId: number,
+    @Param('requestId', ParseIdPipe) requestId: number,
   ): Promise<void> {
     const currentUserId = req.user.id;
     await this.connectionsService.cancelSentRequest(currentUserId, requestId);
@@ -60,7 +59,7 @@ export class ConnectionsController {
   @UseGuards(ConnectionReceiverGuard)
   async acceptRequest(
     @Request() req: RequestWithUser,
-    @Param('requestId', ParseIntPipe) requestId: number,
+    @Param('requestId', ParseIdPipe) requestId: number,
   ): Promise<ConnectionDto> {
     const currentUserId = req.user.id;
     return this.connectionsService.acceptRequest(currentUserId, requestId);
@@ -70,7 +69,7 @@ export class ConnectionsController {
   @UseGuards(ConnectionReceiverGuard)
   async rejectRequest(
     @Request() req: RequestWithUser,
-    @Param('requestId', ParseIntPipe) requestId: number,
+    @Param('requestId', ParseIdPipe) requestId: number,
   ): Promise<ConnectionDto> {
     const currentUserId = req.user.id;
     return this.connectionsService.rejectRequest(currentUserId, requestId);
@@ -81,7 +80,7 @@ export class ConnectionsController {
   @UseGuards(ConnectionParticipantGuard)
   async removeConnection(
     @Request() req: RequestWithUser,
-    @Param('connectionId', ParseIntPipe) connectionId: number,
+    @Param('connectionId', ParseIdPipe) connectionId: number,
   ): Promise<void> {
     const currentUserId = req.user.id;
     await this.connectionsService.removeConnection(currentUserId, connectionId);
@@ -117,7 +116,7 @@ export class ConnectionsController {
   @Get('status/:userId')
   async getConnectionStatusWithUser(
     @Request() req: RequestWithUser,
-    @Param('userId', ParseIntPipe) otherUserId: number,
+    @Param('userId', ParseIdPipe) otherUserId: number,
   ): Promise<ConnectionStatusWithUserDto> {
     const currentUserId = req.user.id;
 
@@ -125,6 +124,13 @@ export class ConnectionsController {
       currentUserId,
       otherUserId,
     );
+  }
+
+  @Get('user/:userId')
+  async getAcceptedConnectionsByUser(
+    @Param('userId', ParseIdPipe) userId: number,
+  ) {
+    return this.connectionsService.getAcceptedConnections(userId);
   }
 
   @Post('block')
@@ -144,7 +150,7 @@ export class ConnectionsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async unblockUser(
     @Request() req: RequestWithUser,
-    @Param('userIdToUnblock', ParseIntPipe) userIdToUnblock: number,
+    @Param('userIdToUnblock', ParseIdPipe) userIdToUnblock: number,
   ): Promise<void> {
     const currentUserId = req.user.id;
     await this.connectionsService.unblockUser(currentUserId, userIdToUnblock);
