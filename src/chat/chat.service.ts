@@ -18,7 +18,7 @@ import { ConversationDto } from './dto/conversation.dto';
 import { MessageDto } from './dto/message.dto';
 import { UsersService } from '../users/users.service';
 import { plainToInstance } from 'class-transformer';
-import { UserProfileDto } from '../users/dto/user-profile.dto';
+import { UserProfileDto } from '../users/dto/user-profile.dto'; // مطمئن شو این DTO شامل اطلاعات فایل پروفایل هست
 import { FileEntity } from '../files/entities/file.entity';
 import { MessageStatus } from './enums/message-status.enum';
 import { FileVisibility } from '../files/enums/file-visibility.enum';
@@ -56,6 +56,11 @@ export class ChatService {
       .createQueryBuilder('conversation')
       .innerJoin('conversation.participants', 'participant1_alias')
       .innerJoin('conversation.participants', 'participant2_alias')
+      .leftJoinAndSelect('conversation.participants', 'loaded_participants')
+      .leftJoinAndSelect(
+        'loaded_participants.profileFile',
+        'profile_file_of_participant',
+      )
       .where(
         'participant1_alias.id = :currentUserId AND participant2_alias.id = :otherParticipantId',
         {
@@ -72,18 +77,20 @@ export class ChatService {
           .getQuery();
         return `(${subQuery}) = 2`;
       })
-      .leftJoinAndSelect('conversation.participants', 'loaded_participants')
       .getOne();
 
     if (!conversation) {
       const newConversation = this.conversationRepository.create({
         participants: [currentUser, otherParticipant],
       });
+
       const savedConv = await this.conversationRepository.save(newConversation);
+
       conversation = await this.conversationRepository.findOne({
         where: { id: savedConv.id },
-        relations: ['participants'],
+        relations: ['participants', 'participants.profileFile'],
       });
+
       if (!conversation) {
         throw new NotFoundException('خطا در ایجاد یا بازیابی گفتگو.');
       }
@@ -128,9 +135,7 @@ export class ChatService {
       //   attachmentFileIds,
       //   sender.id,
       // );
-
       await this.filesService.validatePublicFiles(attachmentFileIds);
-
       await this.filesService.markFilesAsUsed(attachmentFileIds);
     }
 
@@ -156,13 +161,20 @@ export class ChatService {
   async getUserConversations(userId: number): Promise<ConversationDto[]> {
     const conversations = await this.conversationRepository
       .createQueryBuilder('conversation')
+      // اول شرکت‌کننده‌ها رو با اطلاعات کاملشون (شامل فایل پروفایل) انتخاب می‌کنیم
       .leftJoinAndSelect('conversation.participants', 'participant_user')
-      .leftJoin(
+      .leftJoinAndSelect(
+        'participant_user.profileFile',
+        'profile_file_of_participant',
+      ) // <--- **مهم: اضافه کردن این خط**
+      // بعد برای فیلتر کردن مکالمات کاربر فعلی، از جدول واسط conversation_participants استفاده می‌کنیم
+      .innerJoin(
+        // تغییر به innerJoin برای اطمینان از وجود کاربر در مکالمه
         'conversation_participants',
         'cp',
-        'cp.conversation_id = conversation.id',
+        'cp.conversation_id = conversation.id AND cp.user_id = :userId', // شرط رو مستقیم اینجا میاریم
+        { userId },
       )
-      .where('cp.user_id = :userId', { userId })
       .orderBy('conversation.updatedAt', 'DESC')
       .getMany();
 
@@ -195,7 +207,7 @@ export class ChatService {
 
     const messages = await this.messageRepository.find({
       where: { conversation: { id: conversationId } },
-      relations: ['sender'],
+      relations: ['sender', 'sender.profileFile'],
       order: { createdAt: 'ASC' },
     });
 
@@ -205,11 +217,7 @@ export class ChatService {
 
     if (unreadMessagesExist) {
       await this.markMessagesAsRead(conversationId, userId);
-      this.chatGateway.emitMessageStatusUpdateToConversation(
-        conversationId,
-        userId,
-        MessageStatus.READ,
-      );
+      // Gateway call for status update will happen inside markMessagesAsRead
     }
 
     return Promise.all(
@@ -244,7 +252,7 @@ export class ChatService {
   ): Promise<ConversationEntity | null> {
     return await this.conversationRepository.findOne({
       where: { id: conversationId },
-      relations: ['participants'],
+      relations: ['participants', 'participants.profileFile'],
     });
   }
 
@@ -253,17 +261,18 @@ export class ChatService {
     currentUserId: number,
     includeLastMessage: boolean = true,
   ): Promise<ConversationDto> {
-    const participantsDto = conversation.participants.map((p) =>
-      plainToInstance(UserProfileDto, p),
-    );
+    const participantsDto = conversation.participants.map((p) => {
+      return plainToInstance(UserProfileDto, p);
+    });
 
     let lastMessageDto: MessageDto | undefined = undefined;
     if (includeLastMessage) {
       const lastMessage = await this.messageRepository.findOne({
         where: { conversation: { id: conversation.id } },
         order: { createdAt: 'DESC' },
-        relations: ['sender'],
+        relations: ['sender', 'sender.profileFile'],
       });
+
       if (lastMessage) {
         lastMessageDto = await this.mapMessageToDto(lastMessage, currentUserId);
       }
@@ -299,16 +308,16 @@ export class ChatService {
         try {
           const file = await this.filesService.findOrFailed(
             fileId,
-            // it's should be private
+            // TODO security
             FileVisibility.PUBLIC,
           );
           if (file) {
             files.push(file);
           }
         } catch (error) {
-          console.error(error);
-          console.warn(
-            `فایل با شناسه ${fileId} برای پیام ${message.id} یافت نشد یا دسترسی مجاز نیست.`,
+          console.error(
+            `Error fetching attachment file ${fileId} for message ${message.id}:`,
+            error,
           );
         }
       }
@@ -320,10 +329,12 @@ export class ChatService {
       }));
     }
 
+    const senderDto = plainToInstance(UserProfileDto, message.sender);
+
     return {
       id: message.id,
       content: message.content,
-      sender: plainToInstance(UserProfileDto, message.sender),
+      sender: senderDto,
       conversationId: message.conversationId,
       attachments: attachmentsDto,
       status: message.status,
