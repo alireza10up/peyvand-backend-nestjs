@@ -123,10 +123,14 @@ export class ChatService {
     }
 
     if (attachmentFileIds && attachmentFileIds.length > 0) {
-      await this.filesService.validatePrivateFilesOfUser(
-        attachmentFileIds,
-        sender.id,
-      );
+      // TODO security check
+      // await this.filesService.validatePrivateFilesOfUser(
+      //   attachmentFileIds,
+      //   sender.id,
+      // );
+
+      await this.filesService.validatePublicFiles(attachmentFileIds);
+
       await this.filesService.markFilesAsUsed(attachmentFileIds);
     }
 
@@ -311,7 +315,7 @@ export class ChatService {
       }
       attachmentsDto = files.map((f) => ({
         id: f.id,
-        url: `/files/private/${f.id}`,
+        url: f.url,
         filename: f.filename,
         mimetype: f.mimetype,
       }));
