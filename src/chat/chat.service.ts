@@ -291,8 +291,6 @@ export class ChatService {
     message: MessageEntity,
     currentUserId: number,
   ): Promise<MessageDto> {
-    console.log(currentUserId);
-
     let attachmentsDto: Partial<FileEntity>[] | undefined = undefined;
 
     if (message.attachment_file_ids && message.attachment_file_ids.length > 0) {
@@ -301,7 +299,8 @@ export class ChatService {
         try {
           const file = await this.filesService.findOrFailed(
             fileId,
-            FileVisibility.PRIVATE,
+            // it's should be private
+            FileVisibility.PUBLIC,
           );
           if (file) {
             files.push(file);
