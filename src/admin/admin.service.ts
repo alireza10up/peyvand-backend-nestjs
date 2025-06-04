@@ -95,6 +95,12 @@ export class AdminService {
       'UPLOAD_DESTINATION',
       'UPLOAD_MAX_FILE_SIZE',
       'UPLOAD_ALLOWED_MIME_TYPES',
+      'FILE_EXPIRES_AT',
+      'AI_MODELS',
+      'OPENROUTER_BASE_URL',
+      'AI_SYSTEM_PROMPT',
+      'SITE_URL',
+      'SITE_NAME',
     ];
     const envs = {};
     for (const key of keys) {
