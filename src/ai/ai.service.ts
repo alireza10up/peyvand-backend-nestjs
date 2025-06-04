@@ -48,12 +48,7 @@ export class AiService {
           model,
           messages: formattedMessages,
         },
-        {
-          headers: {
-            'HTTP-Referer': this.configService.get<string>('SITE_URL', ''),
-            'X-Title': this.configService.get<string>('SITE_NAME', ''),
-          },
-        },
+        {},
       );
 
       return completion?.choices[0]?.message?.content ?? null;
