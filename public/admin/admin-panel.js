@@ -737,6 +737,78 @@ class RelationshipsSection extends Section {
   }
 }
 
+// دانشگاه‌ها
+const universitiesSection = new Section('universities');
+
+async function renderUniversities() {
+  universitiesSection.el.innerHTML = `<h2>مدیریت دانشگاه‌ها</h2>
+    <form id="add-university-form">
+      <input type="text" id="university-name" placeholder="نام دانشگاه" maxlength="128" required />
+      <button type="submit">افزودن</button>
+    </form>
+    <ul id="universities-list"></ul>`;
+
+  const listEl = document.getElementById('universities-list');
+  const res = await fetchWithAuth('/admin/universities');
+  const universities = await res.json();
+  listEl.innerHTML = '';
+  universities.forEach(u => {
+    const li = document.createElement('li');
+    li.textContent = u.name;
+    li.innerHTML += ` <button data-id="${u.id}" class="delete-university">حذف</button>`;
+    li.innerHTML += ` <button data-id="${u.id}" data-name="${u.name}" class="edit-university">ویرایش</button>`;
+    listEl.appendChild(li);
+  });
+
+  document.querySelectorAll('.delete-university').forEach(btn => {
+    btn.onclick = async e => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('آیا مطمئن هستید؟')) {
+        await fetchWithAuth(`/admin/universities/${id}`, { method: 'DELETE' });
+        showSuccess('دانشگاه حذف شد');
+        renderUniversities();
+      }
+    };
+  });
+
+  document.querySelectorAll('.edit-university').forEach(btn => {
+    btn.onclick = async e => {
+      const id = btn.getAttribute('data-id');
+      const oldName = btn.getAttribute('data-name');
+      const newName = prompt('نام جدید دانشگاه:', oldName);
+      if (newName && newName !== oldName) {
+        await fetchWithAuth(`/admin/universities/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ name: newName })
+        });
+        showSuccess('دانشگاه ویرایش شد');
+        renderUniversities();
+      }
+    };
+  });
+
+  document.getElementById('add-university-form').onsubmit = async e => {
+    e.preventDefault();
+    const name = document.getElementById('university-name').value.trim();
+    if (name) {
+      await fetchWithAuth('/admin/universities', {
+        method: 'POST',
+        body: JSON.stringify({ name })
+      });
+      showSuccess('دانشگاه اضافه شد');
+      renderUniversities();
+    }
+  };
+}
+
+// نمایش بخش دانشگاه‌ها هنگام انتخاب از منو
+const universitiesMenu = document.querySelector('[data-section="universities"]');
+universitiesMenu.addEventListener('click', () => {
+  document.querySelectorAll('.panel-section').forEach(s => s.style.display = 'none');
+  universitiesSection.show();
+  renderUniversities();
+});
+
 class AdminPanel {
   constructor() {
     this.sections = {
