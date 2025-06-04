@@ -1,3 +1,7 @@
+# [0.11.0]
+
+- ai: implement ai completion
+
 # [0.10.0]
 
 - admin: implement panel admin
