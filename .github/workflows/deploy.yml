@@ -29,31 +29,23 @@ jobs:
           ssh -i ~/.ssh/id_rsa -p 7544 fincho@154.16.16.2 << 'EOF'
           echo "🚀 Starting Deployment..."
           cd /home/fincho
-
           if [ ! -d "peyvand-backend-nestjs/.git" ]; then
             echo "⚠️ Repository not found, cloning again..."
-            GIT_SSH_COMMAND="ssh -i ~/.ssh/peyvand_rsa -o StrictHostKeyChecking=no" git clone git@github.com:alireza10up/peyvand-backend-nestjs.git peyvand-backend-nestjs
+            git clone git@github.com:alireza10up/peyvand-backend-nestjs.git peyvand-backend-nestjs
           fi
-
           cd peyvand-backend-nestjs
+          git config --global user.email "ci@peyvand.com"
+          git config --global user.name "Peyvand CI"
           echo "📂 Current Directory: $(pwd)"
           echo "📄 Directory Content:"
           ls -la
-          
           git reset --hard
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/peyvand_rsa -o StrictHostKeyChecking=no" git pull origin develop
+          git pull origin develop
           npm install --legacy-peer-deps
-
-          # Create .env file from GitHub Secrets
           echo "${{ secrets.ENV_VARS }}" > .env
-
-          # Run migrations 
           echo "🚀 Running Migrations..."
           npm run migrate || echo "⚠️ No migration script found."
-
-          # Restart app with pm2
           pm2 delete peyvand || true
           pm2 start npm --name "peyvand" --cwd /home/fincho/peyvand-backend-nestjs -- run start
-          
           echo "✅ Deployment Finished!"
           EOF
