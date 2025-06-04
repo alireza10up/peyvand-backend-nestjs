@@ -13,6 +13,7 @@ import { ChatModule } from './chat/chat.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AdminModule } from './admin/admin.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AdminModule } from './admin/admin.module';
     CommentsModule,
     ChatModule,
     AdminModule,
+    AiModule,
     ServeStaticModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -39,10 +41,7 @@ import { AdminModule } from './admin/admin.module';
           'UPLOAD_DESTINATION',
           'uploads',
         );
-        const adminPath = configService.get<string>(
-          'ADMIN_PANEL',
-          'admin',
-        );
+        const adminPath = configService.get<string>('ADMIN_PANEL', 'admin');
 
         const rootPathUpload = join(process.cwd(), uploadPath);
         const rootPathAdmin = join(process.cwd(), 'public/admin');
