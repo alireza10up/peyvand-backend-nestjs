@@ -461,4 +461,21 @@ export class ConnectionsService {
   async findAll() {
     return this.connectionRepository.find();
   }
+
+  async count(): Promise<number> {
+    return this.connectionRepository.count();
+  }
+
+  async findRecent(limit: number): Promise<ConnectionEntity[]> {
+    return this.connectionRepository.find({
+      order: { createdAt: 'DESC' },
+      take: limit,
+      relations: [
+        'requester',
+        'receiver',
+        'requester.profileFile',
+        'receiver.profileFile',
+      ],
+    });
+  }
 }

@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   UseGuards,
+  Sse,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminGuard } from '../auth/guard/admin.guard';
@@ -17,6 +18,7 @@ import { UsersService } from '../users/users.service';
 import { PostsService } from '../posts/posts.service';
 import { CommentsService } from '../comments/comments.service';
 import { ConnectionStatus } from '../connections/enums/connection-status.enum';
+import { Observable } from 'rxjs';
 
 interface NetworkNode {
   id: string;
@@ -111,6 +113,14 @@ export class AdminController {
     return this.adminService.getEnvVars();
   }
 
+  @Patch('env/:key')
+  updateEnvVar(
+    @Param('key') key: string,
+    @Body('value') value: string,
+  ) {
+    return this.adminService.updateEnvVar(key, value);
+  }
+
   @Post('restart')
   restartSystem() {
     return this.adminService.restartSystem();
@@ -119,6 +129,30 @@ export class AdminController {
   @Get('logs')
   getLogs(@Query('limit') limit: number = 50) {
     return this.adminService.getLogs(limit);
+  }
+
+  @Sse('logs/live')
+  getLiveLogs(): Observable<{ data: string }> {
+    return new Observable<{ data: string }>((subscriber) => {
+      const interval = setInterval(async () => {
+        const logs = await this.adminService.getLiveLogs();
+        subscriber.next({ data: logs });
+      }, 1000);
+
+      return () => {
+        clearInterval(interval);
+      };
+    });
+  }
+
+  @Get('files')
+  getFiles(@Query() query: any) {
+    return this.adminService.getFiles(query);
+  }
+
+  @Delete('files/:id')
+  deleteFile(@Param('id') id: number) {
+    return this.adminService.deleteFile(id);
   }
 
   @Post('logs')

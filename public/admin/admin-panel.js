@@ -5,6 +5,26 @@ class Section {
   }
   async show() { this.el.style.display = 'block'; }
   hide() { this.el.style.display = 'none'; }
+
+  formatUserName(user) {
+    if (!user) return '-';
+    
+    const parts = [];
+    
+    // Add full name if available
+    if (user.firstName || user.lastName) {
+      const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
+      if (fullName) parts.push(fullName);
+    }
+    
+    // Add email
+    if (user.email) parts.push(user.email);
+    
+    // Add username if available
+    if (user.username) parts.push(`@${user.username}`);
+    
+    return parts.length > 0 ? parts.join(' | ') : '-';
+  }
 }
 
 // Helper for fetch with token and error handling
@@ -61,7 +81,8 @@ class OverviewSection extends Section {
     try {
       const res = await fetchWithAuth('/admin/overview');
       const data = await res.json();
-      this.el.innerHTML = `
+      
+      let html = `
         <h2>داشبورد</h2>
         <div class="stats-grid">
           <div class="stat-card">
@@ -79,12 +100,114 @@ class OverviewSection extends Section {
             <h3>نظرات</h3>
             <p>${data.commentsCount}</p>
           </div>
+          <div class="stat-card">
+            <i class="fas fa-project-diagram"></i>
+            <h3>ارتباطات</h3>
+            <p>${data.connectionsCount}</p>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-file"></i>
+            <h3>فایل‌ها</h3>
+            <p>${data.filesCount}</p>
+          </div>
+        </div>
+
+        <div class="recent-items">
+          <div class="recent-section">
+            <h3>آخرین کاربران</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>شناسه</th>
+                    <th>نام کاربری</th>
+                    <th>ایمیل</th>
+                    <th>تاریخ ثبت‌نام</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${data.recentUsers.map(user => `
+                    <tr>
+                      <td>${user.id}</td>
+                      <td>${this.formatUserName(user)}</td>
+                      <td>${user.email}</td>
+                      <td>${new Date(user.createdAt).toLocaleString('fa-IR')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="recent-section">
+            <h3>آخرین پست‌ها</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>شناسه</th>
+                    <th>کاربر</th>
+                    <th>محتوا</th>
+                    <th>تاریخ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${data.recentPosts.map(post => `
+                    <tr>
+                      <td>${post.id}</td>
+                      <td>${this.formatUserName(post.user)}</td>
+                      <td>${post.content?.substring(0, 50)}${post.content?.length > 50 ? '...' : ''}</td>
+                      <td>${new Date(post.createdAt).toLocaleString('fa-IR')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="recent-section">
+            <h3>آخرین ارتباطات</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>درخواست‌دهنده</th>
+                    <th>دریافت‌کننده</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${data.recentConnections.map(conn => `
+                    <tr>
+                      <td>${this.formatUserName(conn.requester)}</td>
+                      <td>${this.formatUserName(conn.receiver)}</td>
+                      <td>${this.getConnectionStatusText(conn.status)}</td>
+                      <td>${new Date(conn.createdAt).toLocaleString('fa-IR')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       `;
+      
+      this.el.innerHTML = html;
       super.show();
     } catch (error) {
       this.el.innerHTML = `<div class="error">خطا در بارگذاری اطلاعات</div>`;
     }
+  }
+
+  getConnectionStatusText(status) {
+    const statusMap = {
+      'PENDING': 'در انتظار',
+      'ACCEPTED': 'پذیرفته شده',
+      'REJECTED': 'رد شده',
+      'BLOCKED': 'مسدود شده'
+    };
+    return statusMap[status] || status;
   }
 }
 
@@ -101,6 +224,7 @@ class UsersSection extends Section {
             <thead>
               <tr>
                 <th>شناسه</th>
+                <th>نام</th>
                 <th>ایمیل</th>
                 <th>ادمین</th>
                 <th>عملیات</th>
@@ -113,6 +237,7 @@ class UsersSection extends Section {
         html += `
           <tr>
             <td>${u.id}</td>
+            <td>${this.formatUserName(u)}</td>
             <td>${u.email}</td>
             <td>${u.isAdmin ? 'بله' : 'خیر'}</td>
             <td>
@@ -259,22 +384,24 @@ class PostsSection extends Section {
             <thead>
               <tr>
                 <th>شناسه</th>
-                <th>عنوان</th>
                 <th>کاربر</th>
+                <th>محتوا</th>
+                <th>تاریخ</th>
                 <th>عملیات</th>
               </tr>
             </thead>
             <tbody>
       `;
       
-      posts.forEach(p => {
+      posts.forEach(post => {
         html += `
           <tr>
-            <td>${p.id}</td>
-            <td>${p.title || ''}</td>
-            <td>${p.user?.email || ''}</td>
+            <td>${post.id}</td>
+            <td>${this.formatUserName(post.user)}</td>
+            <td>${post.content?.substring(0, 100)}${post.content?.length > 100 ? '...' : ''}</td>
+            <td>${new Date(post.createdAt).toLocaleString('fa-IR')}</td>
             <td>
-              <button class="action-btn delete" data-post-id="${p.id}">حذف</button>
+              <button class="action-btn delete" data-post-id="${post.id}">حذف</button>
             </td>
           </tr>
         `;
@@ -325,24 +452,26 @@ class CommentsSection extends Section {
             <thead>
               <tr>
                 <th>شناسه</th>
-                <th>متن</th>
                 <th>کاربر</th>
                 <th>پست</th>
+                <th>محتوا</th>
+                <th>تاریخ</th>
                 <th>عملیات</th>
               </tr>
             </thead>
             <tbody>
       `;
       
-      comments.forEach(c => {
+      comments.forEach(comment => {
         html += `
           <tr>
-            <td>${c.id}</td>
-            <td>${c.content}</td>
-            <td>${c.user?.email || ''}</td>
-            <td>${c.post?.id || ''}</td>
+            <td>${comment.id}</td>
+            <td>${this.formatUserName(comment.user)}</td>
+            <td>${comment.post?.content?.substring(0, 50) || '-'}${comment.post?.content?.length > 50 ? '...' : ''}</td>
+            <td>${comment.content?.substring(0, 50)}${comment.content?.length > 50 ? '...' : ''}</td>
+            <td>${new Date(comment.createdAt).toLocaleString('fa-IR')}</td>
             <td>
-              <button class="action-btn delete" data-comment-id="${c.id}">حذف</button>
+              <button class="action-btn delete" data-comment-id="${comment.id}">حذف</button>
             </td>
           </tr>
         `;
@@ -376,6 +505,86 @@ class CommentsSection extends Section {
           }
         }
       };
+    });
+  }
+}
+
+class FilesSection extends Section {
+  constructor() { super('files'); }
+  async show() {
+    try {
+      const res = await fetchWithAuth('/admin/files');
+      const files = await res.json();
+      let html = `
+        <h2>مدیریت فایل‌ها</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>شناسه</th>
+                <th>نام فایل</th>
+                <th>نوع</th>
+                <th>حجم</th>
+                <th>تاریخ آپلود</th>
+                <th>عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      files.forEach(file => {
+        html += `
+          <tr>
+            <td>${file.id}</td>
+            <td>${file.originalName}</td>
+            <td>${file.mimeType}</td>
+            <td>${this.formatFileSize(file.size)}</td>
+            <td>${new Date(file.createdAt).toLocaleString('fa-IR')}</td>
+            <td>
+              <button class="action-btn delete" data-file-id="${file.id}">حذف</button>
+              <a href="${file.url}" target="_blank" class="action-btn view">مشاهده</a>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      this.el.innerHTML = html;
+      this.attachEventListeners();
+      super.show();
+    } catch (error) {
+      this.el.innerHTML = `<div class="error">خطا در بارگذاری فایل‌ها</div>`;
+    }
+  }
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  attachEventListeners() {
+    this.el.querySelectorAll('.action-btn.delete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (confirm('آیا از حذف این فایل اطمینان دارید؟')) {
+          const fileId = e.target.dataset.fileId;
+          try {
+            await fetchWithAuth(`/admin/files/${fileId}`, {
+              method: 'DELETE'
+            });
+            this.show();
+          } catch (error) {
+            alert('خطا در حذف فایل');
+          }
+        }
+      });
     });
   }
 }
@@ -516,15 +725,31 @@ class EnvSection extends Section {
       
       let html = `
         <h2>متغیرهای محیطی</h2>
-        <div class="info-grid">
+        <div class="env-grid">
       `;
       
-      // Add each environment variable as an info item
+      const sensitiveKeys = ['SECRET', 'KEY', 'PASSWORD', 'TOKEN', 'AUTH'];
+      
       Object.entries(env).forEach(([key, value]) => {
+        const isSensitive = sensitiveKeys.some(sensitiveKey => 
+          key.toUpperCase().includes(sensitiveKey)
+        );
+        
         html += `
-          <div class="info-item">
-            <h4>${key}</h4>
-            <p>${value}</p>
+          <div class="env-item">
+            <label>${key}</label>
+            <div class="env-value">
+              <input type="${isSensitive ? 'password' : 'text'}" 
+                     value="${value}" 
+                     data-key="${key}"
+                     ${isSensitive ? 'data-sensitive="true"' : ''} />
+              ${isSensitive ? `
+                <button class="action-btn toggle-visibility" data-key="${key}">
+                  <i class="fas fa-eye"></i>
+                </button>
+              ` : ''}
+              <button class="action-btn edit" data-key="${key}">ذخیره</button>
+            </div>
           </div>
         `;
       });
@@ -534,10 +759,54 @@ class EnvSection extends Section {
       `;
       
       this.el.innerHTML = html;
+      this.attachEventListeners();
       super.show();
     } catch (error) {
       this.el.innerHTML = `<div class="error">خطا در بارگذاری متغیرهای محیطی</div>`;
     }
+  }
+
+  attachEventListeners() {
+    // Toggle visibility for sensitive values
+    this.el.querySelectorAll('.toggle-visibility').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const key = e.target.closest('button').dataset.key;
+        const input = this.el.querySelector(`input[data-key="${key}"]`);
+        const icon = e.target.closest('button').querySelector('i');
+        
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
+      });
+    });
+
+    // Save environment variable
+    this.el.querySelectorAll('.action-btn.edit').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const key = e.target.closest('button').dataset.key;
+        const input = this.el.querySelector(`input[data-key="${key}"]`);
+        const value = input.value;
+        
+        try {
+          await fetchWithAuth(`/admin/env/${key}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ value })
+          });
+          alert('متغیر محیطی با موفقیت بروزرسانی شد');
+        } catch (error) {
+          alert('خطا در بروزرسانی متغیر محیطی');
+        }
+      });
+    });
   }
 }
 
@@ -547,41 +816,50 @@ class LogsSection extends Section {
     try {
       const res = await fetchWithAuth('/admin/logs');
       const logs = await res.json();
+      
       let html = `
         <h2>لاگ‌های سیستم</h2>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>زمان</th>
-                <th>سطح</th>
-                <th>پیام</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      logs.forEach(log => {
-        html += `
-          <tr class="log-level-${log.level}">
-            <td>${new Date(log.timestamp).toLocaleString('fa-IR')}</td>
-            <td>${log.level}</td>
-            <td>${log.message}</td>
-          </tr>
-        `;
-      });
-      
-      html += `
-            </tbody>
-          </table>
+        <div class="logs-container">
+          <div class="logs-controls">
+            <button class="action-btn" id="toggleLiveLogs">نمایش لاگ‌های زنده</button>
+            <button class="action-btn" id="clearLogs">پاک کردن لاگ‌ها</button>
+          </div>
+          <div class="logs-content">
+            <pre id="logsOutput">${logs.join('\n')}</pre>
+          </div>
         </div>
       `;
       
       this.el.innerHTML = html;
+      this.attachEventListeners();
       super.show();
     } catch (error) {
       this.el.innerHTML = `<div class="error">خطا در بارگذاری لاگ‌ها</div>`;
     }
+  }
+
+  attachEventListeners() {
+    let eventSource = null;
+    const logsOutput = this.el.querySelector('#logsOutput');
+    
+    this.el.querySelector('#toggleLiveLogs').addEventListener('click', (e) => {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+        e.target.textContent = 'نمایش لاگ‌های زنده';
+      } else {
+        eventSource = new EventSource('/admin/logs/live');
+        eventSource.onmessage = (event) => {
+          logsOutput.textContent = event.data;
+          logsOutput.scrollTop = logsOutput.scrollHeight;
+        };
+        e.target.textContent = 'توقف لاگ‌های زنده';
+      }
+    });
+
+    this.el.querySelector('#clearLogs').addEventListener('click', () => {
+      logsOutput.textContent = '';
+    });
   }
 }
 
@@ -744,6 +1022,7 @@ class AdminPanel {
       users: new UsersSection(),
       posts: new PostsSection(),
       comments: new CommentsSection(),
+      files: new FilesSection(),
       settings: new SettingsSection(),
       system: new SystemSection(),
       env: new EnvSection(),

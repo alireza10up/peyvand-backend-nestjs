@@ -115,12 +115,20 @@ export class UsersService {
     return this.usersRepository.delete(userId);
   }
 
-  async count() {
+  async count(): Promise<number> {
     return this.usersRepository.count();
   }
 
   async findAll(query?: any) {
     return this.usersRepository.find(); // TODO: add query support
+  }
+
+  async findRecent(limit: number): Promise<UserEntity[]> {
+    return this.usersRepository.find({
+      order: { createdAt: 'DESC' },
+      take: limit,
+      relations: ['profileFile'],
+    });
   }
 
   async changePassword(userId: number, newPassword: string) {

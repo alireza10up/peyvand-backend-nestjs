@@ -140,4 +140,15 @@ export class FilesService {
     }
     return files;
   }
+
+  async count(): Promise<number> {
+    return this.filesRepository.count();
+  }
+
+  async findAll(query?: any): Promise<FileEntity[]> {
+    return this.filesRepository.find({
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 }

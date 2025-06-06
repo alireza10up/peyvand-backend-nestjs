@@ -5,6 +5,7 @@ import { ConnectionsModule } from '../connections/connections.module';
 import { UsersModule } from '../users/users.module';
 import { PostsModule } from '../posts/posts.module';
 import { CommentsModule } from '../comments/comments.module';
+import { FilesModule } from '../files/files.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { CommentsModule } from '../comments/comments.module';
     UsersModule,
     PostsModule,
     CommentsModule,
+    FilesModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

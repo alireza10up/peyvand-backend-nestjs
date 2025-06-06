@@ -125,8 +125,16 @@ export class PostsService {
     });
   }
 
-  async count() {
+  async count(): Promise<number> {
     return this.postsRepository.count();
+  }
+
+  async findRecent(limit: number): Promise<PostEntity[]> {
+    return this.postsRepository.find({
+      order: { createdAt: 'DESC' },
+      take: limit,
+      relations: ['user', 'files'],
+    });
   }
 
   async delete(postId: number) {
