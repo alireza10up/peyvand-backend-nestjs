@@ -721,92 +721,103 @@ class EnvSection extends Section {
   async show() {
     try {
       const res = await fetchWithAuth('/admin/env');
-      const env = await res.json();
+      const envVars = await res.json();
+      
+      // Define sensitive keys that should be hidden by default
+      const sensitiveKeys = [
+        'SECRET', 'KEY', 'PASSWORD', 'TOKEN', 'AUTH', 'API_KEY', 
+        'PRIVATE', 'CREDENTIAL', 'SIGNATURE', 'HASH', 'SALT'
+      ];
       
       let html = `
-        <h2>متغیرهای محیطی</h2>
+        <h2>مدیریت متغیرهای محیطی</h2>
         <div class="env-grid">
       `;
       
-      const sensitiveKeys = ['SECRET', 'KEY', 'PASSWORD', 'TOKEN', 'AUTH'];
+      // Sort environment variables by key
+      const sortedEnvVars = Object.entries(envVars).sort(([a], [b]) => a.localeCompare(b));
       
-      Object.entries(env).forEach(([key, value]) => {
+      for (const [key, value] of sortedEnvVars) {
         const isSensitive = sensitiveKeys.some(sensitiveKey => 
           key.toUpperCase().includes(sensitiveKey)
         );
         
         html += `
           <div class="env-item">
-            <label>${key}</label>
+            <div class="env-key">${key}</div>
             <div class="env-value">
               <input type="${isSensitive ? 'password' : 'text'}" 
                      value="${value}" 
                      data-key="${key}"
-                     ${isSensitive ? 'data-sensitive="true"' : ''} />
+                     ${isSensitive ? 'data-sensitive="true"' : ''}>
               ${isSensitive ? `
                 <button class="action-btn toggle-visibility" data-key="${key}">
                   <i class="fas fa-eye"></i>
                 </button>
               ` : ''}
-              <button class="action-btn edit" data-key="${key}">ذخیره</button>
+              <button class="action-btn save" data-key="${key}">
+                <i class="fas fa-save"></i>
+              </button>
             </div>
           </div>
         `;
-      });
+      }
       
       html += `
         </div>
       `;
       
       this.el.innerHTML = html;
-      this.attachEventListeners();
+      
+      // Add event listeners for toggle visibility
+      this.el.querySelectorAll('.toggle-visibility').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const key = e.target.closest('button').dataset.key;
+          const input = this.el.querySelector(`input[data-key="${key}"]`);
+          const icon = e.target.closest('button').querySelector('i');
+          
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+          } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+          }
+        });
+      });
+      
+      // Add event listeners for save
+      this.el.querySelectorAll('.save').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const key = e.target.closest('button').dataset.key;
+          const input = this.el.querySelector(`input[data-key="${key}"]`);
+          const value = input.value;
+          
+          try {
+            await fetchWithAuth('/admin/env', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key, value })
+            });
+            
+            // Show success message
+            const successMsg = document.createElement('div');
+            successMsg.className = 'success-message';
+            successMsg.textContent = 'متغیر با موفقیت ذخیره شد';
+            e.target.closest('.env-item').appendChild(successMsg);
+            
+            // Remove success message after 2 seconds
+            setTimeout(() => successMsg.remove(), 2000);
+          } catch (error) {
+            alert('خطا در ذخیره متغیر');
+          }
+        });
+      });
+      
       super.show();
     } catch (error) {
       this.el.innerHTML = `<div class="error">خطا در بارگذاری متغیرهای محیطی</div>`;
     }
-  }
-
-  attachEventListeners() {
-    // Toggle visibility for sensitive values
-    this.el.querySelectorAll('.toggle-visibility').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const key = e.target.closest('button').dataset.key;
-        const input = this.el.querySelector(`input[data-key="${key}"]`);
-        const icon = e.target.closest('button').querySelector('i');
-        
-        if (input.type === 'password') {
-          input.type = 'text';
-          icon.classList.remove('fa-eye');
-          icon.classList.add('fa-eye-slash');
-        } else {
-          input.type = 'password';
-          icon.classList.remove('fa-eye-slash');
-          icon.classList.add('fa-eye');
-        }
-      });
-    });
-
-    // Save environment variable
-    this.el.querySelectorAll('.action-btn.edit').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const key = e.target.closest('button').dataset.key;
-        const input = this.el.querySelector(`input[data-key="${key}"]`);
-        const value = input.value;
-        
-        try {
-          await fetchWithAuth(`/admin/env/${key}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ value })
-          });
-          alert('متغیر محیطی با موفقیت بروزرسانی شد');
-        } catch (error) {
-          alert('خطا در بروزرسانی متغیر محیطی');
-        }
-      });
-    });
   }
 }
 
@@ -816,50 +827,56 @@ class LogsSection extends Section {
     try {
       const res = await fetchWithAuth('/admin/logs');
       const logs = await res.json();
-      
       let html = `
         <h2>لاگ‌های سیستم</h2>
         <div class="logs-container">
           <div class="logs-controls">
-            <button class="action-btn" id="toggleLiveLogs">نمایش لاگ‌های زنده</button>
-            <button class="action-btn" id="clearLogs">پاک کردن لاگ‌ها</button>
+            <button id="refreshLogs" class="action-btn">بارگذاری مجدد</button>
+            <button id="clearLogs" class="action-btn">پاک کردن لاگ‌ها</button>
           </div>
           <div class="logs-content">
-            <pre id="logsOutput">${logs.join('\n')}</pre>
+            <pre>${logs.join('\n')}</pre>
+          </div>
+        </div>
+        <div class="live-logs-container">
+          <h3>لاگ‌های زنده</h3>
+          <div class="live-logs-content">
+            <pre id="liveLogs"></pre>
           </div>
         </div>
       `;
       
       this.el.innerHTML = html;
-      this.attachEventListeners();
+      
+      // Add event listeners
+      document.getElementById('refreshLogs').addEventListener('click', () => this.show());
+      document.getElementById('clearLogs').addEventListener('click', async () => {
+        if (confirm('آیا از پاک کردن لاگ‌ها اطمینان دارید؟')) {
+          await fetchWithAuth('/admin/logs', { method: 'DELETE' });
+          this.show();
+        }
+      });
+
+      // Setup live logs
+      const token = localStorage.getItem('token');
+      const eventSource = new EventSource(`/admin/logs/live?token=${token}`);
+      const liveLogsEl = document.getElementById('liveLogs');
+      
+      eventSource.onmessage = (event) => {
+        const log = event.data;
+        liveLogsEl.textContent += log + '\n';
+        liveLogsEl.scrollTop = liveLogsEl.scrollHeight;
+      };
+      
+      eventSource.onerror = () => {
+        eventSource.close();
+        liveLogsEl.textContent += '\n[اتصال به سرور قطع شد]\n';
+      };
+      
       super.show();
     } catch (error) {
       this.el.innerHTML = `<div class="error">خطا در بارگذاری لاگ‌ها</div>`;
     }
-  }
-
-  attachEventListeners() {
-    let eventSource = null;
-    const logsOutput = this.el.querySelector('#logsOutput');
-    
-    this.el.querySelector('#toggleLiveLogs').addEventListener('click', (e) => {
-      if (eventSource) {
-        eventSource.close();
-        eventSource = null;
-        e.target.textContent = 'نمایش لاگ‌های زنده';
-      } else {
-        eventSource = new EventSource('/admin/logs/live');
-        eventSource.onmessage = (event) => {
-          logsOutput.textContent = event.data;
-          logsOutput.scrollTop = logsOutput.scrollHeight;
-        };
-        e.target.textContent = 'توقف لاگ‌های زنده';
-      }
-    });
-
-    this.el.querySelector('#clearLogs').addEventListener('click', () => {
-      logsOutput.textContent = '';
-    });
   }
 }
 

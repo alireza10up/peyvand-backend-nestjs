@@ -635,93 +635,162 @@ tr:hover {
   box-shadow: var(--shadow);
 }
 
-/* Environment Variables Styles */
+/* Environment Variables */
 .env-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .env-item {
   background: var(--card-bg);
-  padding: 16px;
   border-radius: 8px;
-  box-shadow: var(--shadow);
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.env-item label {
-  display: block;
-  color: var(--text-light);
-  font-size: 14px;
-  margin-bottom: 8px;
+.env-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.env-key {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  font-family: monospace;
+  font-size: 0.9rem;
 }
 
 .env-value {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .env-value input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 0.5rem;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  font-family: inherit;
-  font-size: 14px;
-  background: var(--bg-color);
-  color: var(--text-color);
-}
-
-.env-value input[type="password"] {
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text-primary);
   font-family: monospace;
-  letter-spacing: 2px;
+  font-size: 0.9rem;
 }
 
-.action-btn.toggle-visibility {
-  background: var(--info-color);
-  color: #fff;
-  padding: 8px;
-  min-width: 36px;
+.env-value input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
 }
 
-.action-btn.toggle-visibility:hover {
-  opacity: 0.9;
+.action-btn.toggle-visibility,
+.action-btn.save {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background: var(--button-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
 }
 
-.action-btn.toggle-visibility i {
-  margin: 0;
+.action-btn.toggle-visibility:hover,
+.action-btn.save:hover {
+  background: var(--button-hover);
 }
 
-/* Logs Styles */
-.logs-container {
+.success-message {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--success-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Live Logs */
+.live-logs-container {
+  margin-top: 2rem;
   background: var(--card-bg);
   border-radius: 8px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.logs-controls {
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  gap: 12px;
+.live-logs-container h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
 }
 
-.logs-content {
-  padding: 16px;
-  max-height: 600px;
+.live-logs-content {
+  background: var(--bg-color);
+  border-radius: 4px;
+  padding: 1rem;
+  height: 300px;
   overflow-y: auto;
 }
 
-#logsOutput {
+.live-logs-content pre {
   margin: 0;
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
-  color: var(--text-color);
+  font-family: monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* Logs Section */
+.logs-container {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logs-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.logs-content {
+  background: var(--bg-color);
+  border-radius: 4px;
+  padding: 1rem;
+  height: 300px;
+  overflow-y: auto;
+}
+
+.logs-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
 }
 
 /* File Management Styles */
