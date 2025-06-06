@@ -463,12 +463,22 @@ class CommentsSection extends Section {
       `;
       
       comments.forEach(comment => {
+        const postContent = comment.post?.content ? 
+          (comment.post.content.length > 50 ? 
+            comment.post.content.substring(0, 50) + '...' : 
+            comment.post.content) : '-';
+            
+        const commentContent = comment.content ? 
+          (comment.content.length > 50 ? 
+            comment.content.substring(0, 50) + '...' : 
+            comment.content) : '-';
+        
         html += `
           <tr>
             <td>${comment.id}</td>
             <td>${this.formatUserName(comment.user)}</td>
-            <td>${comment.post?.content?.substring(0, 50) || '-'}${comment.post?.content?.length > 50 ? '...' : ''}</td>
-            <td>${comment.content?.substring(0, 50)}${comment.content?.length > 50 ? '...' : ''}</td>
+            <td>${postContent}</td>
+            <td>${commentContent}</td>
             <td>${new Date(comment.createdAt).toLocaleString('fa-IR')}</td>
             <td>
               <button class="action-btn delete" data-comment-id="${comment.id}">حذف</button>
@@ -525,6 +535,7 @@ class FilesSection extends Section {
                 <th>نام فایل</th>
                 <th>نوع</th>
                 <th>حجم</th>
+                <th>کاربر</th>
                 <th>تاریخ آپلود</th>
                 <th>عملیات</th>
               </tr>
@@ -533,16 +544,21 @@ class FilesSection extends Section {
       `;
       
       files.forEach(file => {
+        const fileSize = file.size ? this.formatFileSize(file.size) : '-';
+        const fileType = file.mimeType || '-';
+        const fileName = file.originalName || file.filename || '-';
+        
         html += `
           <tr>
             <td>${file.id}</td>
-            <td>${file.originalName}</td>
-            <td>${file.mimeType}</td>
-            <td>${this.formatFileSize(file.size)}</td>
+            <td>${fileName}</td>
+            <td>${fileType}</td>
+            <td>${fileSize}</td>
+            <td>${this.formatUserName(file.user)}</td>
             <td>${new Date(file.createdAt).toLocaleString('fa-IR')}</td>
             <td>
+              <button class="action-btn view" data-file-id="${file.id}">مشاهده</button>
               <button class="action-btn delete" data-file-id="${file.id}">حذف</button>
-              <a href="${file.url}" target="_blank" class="action-btn view">مشاهده</a>
             </td>
           </tr>
         `;
@@ -563,11 +579,11 @@ class FilesSection extends Section {
   }
 
   formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
+    if (!bytes) return '-';
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    if (bytes === 0) return '0 Byte';
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
   }
 
   attachEventListeners() {
@@ -728,44 +744,64 @@ class EnvSection extends Section {
         'SECRET', 'KEY', 'PASSWORD', 'TOKEN', 'AUTH', 'API_KEY', 
         'PRIVATE', 'CREDENTIAL', 'SIGNATURE', 'HASH', 'SALT'
       ];
+
+      // Define categories for environment variables
+      const categories = {
+        'General': ['ENV_MODE', 'PORT', 'SITE_URL', 'SITE_NAME'],
+        'Database': ['DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_NAME'],
+        'JWT': ['JWT_SECRET', 'JWT_EXPIRES_IN'],
+        'Uploads': ['UPLOAD_DESTINATION', 'UPLOAD_MAX_FILE_SIZE', 'UPLOAD_ALLOWED_MIME_TYPES', 'FILE_EXPIRES_AT'],
+        'Admin': ['DEFAULT_ADMIN_EMAIL', 'DEFAULT_ADMIN_PASSWORD'],
+        'AI': ['OPENROUTER_BASE_URL', 'OPENROUTER_API_KEY', 'AI_MODELS', 'AI_SYSTEM_PROMPT']
+      };
       
       let html = `
         <h2>مدیریت متغیرهای محیطی</h2>
-        <div class="env-grid">
       `;
-      
-      // Sort environment variables by key
-      const sortedEnvVars = Object.entries(envVars).sort(([a], [b]) => a.localeCompare(b));
-      
-      for (const [key, value] of sortedEnvVars) {
-        const isSensitive = sensitiveKeys.some(sensitiveKey => 
-          key.toUpperCase().includes(sensitiveKey)
-        );
+
+      // Create sections for each category
+      for (const [category, keys] of Object.entries(categories)) {
+        html += `
+          <div class="env-category">
+            <h3>${category}</h3>
+            <div class="env-grid">
+        `;
+
+        // Sort keys within category
+        const sortedKeys = keys.sort();
+        
+        for (const key of sortedKeys) {
+          const value = envVars[key] || '';
+          const isSensitive = sensitiveKeys.some(sensitiveKey => 
+            key.toUpperCase().includes(sensitiveKey)
+          );
+          
+          html += `
+            <div class="env-item">
+              <div class="env-key">${key}</div>
+              <div class="env-value">
+                <input type="${isSensitive ? 'password' : 'text'}" 
+                       value="${value}" 
+                       data-key="${key}"
+                       ${isSensitive ? 'data-sensitive="true"' : ''}>
+                ${isSensitive ? `
+                  <button class="action-btn toggle-visibility" data-key="${key}">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                ` : ''}
+                <button class="action-btn save" data-key="${key}">
+                  <i class="fas fa-save"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }
         
         html += `
-          <div class="env-item">
-            <div class="env-key">${key}</div>
-            <div class="env-value">
-              <input type="${isSensitive ? 'password' : 'text'}" 
-                     value="${value}" 
-                     data-key="${key}"
-                     ${isSensitive ? 'data-sensitive="true"' : ''}>
-              ${isSensitive ? `
-                <button class="action-btn toggle-visibility" data-key="${key}">
-                  <i class="fas fa-eye"></i>
-                </button>
-              ` : ''}
-              <button class="action-btn save" data-key="${key}">
-                <i class="fas fa-save"></i>
-              </button>
             </div>
           </div>
         `;
       }
-      
-      html += `
-        </div>
-      `;
       
       this.el.innerHTML = html;
       
@@ -859,7 +895,12 @@ class LogsSection extends Section {
 
       // Setup live logs
       const token = localStorage.getItem('token');
-      const eventSource = new EventSource(`/admin/logs/live?token=${token}`);
+      if (!token) {
+        document.getElementById('liveLogs').textContent = 'برای مشاهده لاگ‌های زنده، لطفا وارد شوید';
+        return;
+      }
+
+      const eventSource = new EventSource(`/admin/logs/live?token=${encodeURIComponent(token)}`);
       const liveLogsEl = document.getElementById('liveLogs');
       
       eventSource.onmessage = (event) => {
@@ -868,9 +909,13 @@ class LogsSection extends Section {
         liveLogsEl.scrollTop = liveLogsEl.scrollHeight;
       };
       
-      eventSource.onerror = () => {
+      eventSource.onerror = (error) => {
         eventSource.close();
-        liveLogsEl.textContent += '\n[اتصال به سرور قطع شد]\n';
+        if (error.status === 401) {
+          liveLogsEl.textContent = 'دسترسی غیرمجاز، لطفا مجددا وارد شوید';
+        } else {
+          liveLogsEl.textContent += '\n[اتصال به سرور قطع شد]\n';
+        }
       };
       
       super.show();

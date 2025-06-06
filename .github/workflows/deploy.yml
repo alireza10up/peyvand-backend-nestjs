@@ -45,7 +45,7 @@ jobs:
           npm install --legacy-peer-deps
 
           # Create .env file from GitHub Secrets
-          echo "${{ secrets.ENV_VARS }}" > .env
+          echo "${{ secrets.ENV_VARS }}" | base64 -d > .env
 
           # Run migrations 
           echo "🚀 Running Migrations..."
